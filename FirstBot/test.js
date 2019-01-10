@@ -98,7 +98,7 @@ function makeShortestPathTree(startLocation, movableRadius) {
   q.enqueue(startLocation);
   var blankRow = new Array(sideLength);
   var costs = [];
-  for (i = 0; i < sideLength; i++) {
+  for (var i = 0; i < sideLength; i++) {
     costs.push(blankRow.slice());
   }
   costs[startLocation.y][startLocation.x] = [0, null]; //costs[y][x] = [numMoves, offset to get here from previous]
@@ -154,7 +154,7 @@ var sideLength = 6;
 
 console.log("Map: ")
 console.log(map);
-var tree = makeShortestPathTree(new Location(3, 1), 1);
+var tree = makeShortestPathTree(new Location(3, 1), 4);
 console.log(JSON.stringify(getReversePathTo(tree, new Location(3, 1), new Location(4, 4))));
 
 //console.log(getOffsetsInRange(1));
