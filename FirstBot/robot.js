@@ -87,10 +87,12 @@ class MyRobot extends BCAbstractRobot {
   }
 
 //TODO: For castles and churches, on turn 1, make list of available building locations
+//TODO: perhaps have castles and churches keep track off and tell units their order in turn queue??
   turn() {
 
     if(this.me.turn == 1) {
       //TODO: optimize later to take advantage of map symmetry
+      //TODO: perhaps sort this by nearest to furthest from bot?
       this.karbList = [];
       this.fuelList = []
       for(var y = 0; y < this.map.length; y++) {
