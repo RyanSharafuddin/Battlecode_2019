@@ -1,9 +1,9 @@
 import {BCAbstractRobot, SPECS} from 'battlecode';
 import {Queue} from './Queue.js';
 import {Location} from './Location.js';
-import {getMinIndex} from './utilities.js'
-import {getOffsetsInRange, getMovableOffsets, makeShortestPathTree, getReversePathTo} from './navigation.js'
-//return this.action
+import * as utilities from './utilities.js'
+import * as navigation from './navigation.js'
+
 
 
 class MyRobot extends BCAbstractRobot {
@@ -75,16 +75,16 @@ class MyRobot extends BCAbstractRobot {
         //TODO: generalize to nearest fuel and nearest karb function
         //TODO: consider going to second nearest and stuff
         if(this.me.turn === 1) {
-          this.shortestPathTree = makeShortestPathTree(new Location(this.me.y, this.me.x), SPECS.UNITS[SPECS.PILGRIM].SPEED, this.map);
+          this.shortestPathTree = navigation.makeShortestPathTree(new Location(this.me.y, this.me.x), SPECS.UNITS[SPECS.PILGRIM].SPEED, this.map);
           this.karbCosts = [];
           for(var i = 0; i < this.karbList.length; i++) {
             var karbLoc = this.karbList[i];
             this.karbCosts.push(this.shortestPathTree[karbLoc[0]][karbLoc[1]][0]);
           }
-          var minKarbIndex = getMinIndex(this.karbCosts);
+          var minKarbIndex = utilities.getMinIndex(this.karbCosts);
           var nearestKarbCoords = this.karbList[minKarbIndex];
           this.log("Coordinates of nearest karbonite are: " + JSON.stringify(nearestKarbCoords));
-          this.reversePathToNearestKarb = getReversePathTo(this.shortestPathTree, new Location(this.me.y, this.me.x), new Location(this.karbList[minKarbIndex][0], this.karbList[minKarbIndex][1]));
+          this.reversePathToNearestKarb = navigation.getReversePathTo(this.shortestPathTree, new Location(this.me.y, this.me.x), new Location(this.karbList[minKarbIndex][0], this.karbList[minKarbIndex][1]));
           this.log("The reverse path to nearest karbonite is: ");
           this.log(JSON.stringify(this.reversePathToNearestKarb));
           this.moveToDo = this.reversePathToNearestKarb.length - 1;

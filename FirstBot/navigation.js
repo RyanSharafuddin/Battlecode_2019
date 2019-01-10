@@ -1,5 +1,6 @@
 import {Queue} from './Queue.js';
 import {Location} from './Location.js';
+import * as utilities from './utilities.js'
 
 export function getOffsetsInRange(movableRadius) {
   //given movableRadius, returns a list of [dy, dx] that can move
