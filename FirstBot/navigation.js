@@ -39,7 +39,7 @@ export function getOffsetsInRange(movableRadius) {
           return false;
         }
         return map[yLoc][xLoc];
-      }.bind(this));
+      });
     }
 
     export function makeShortestPathTree(startLocation, movableRadius, map) {

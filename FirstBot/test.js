@@ -154,7 +154,7 @@ var sideLength = 6;
 
 console.log("Map: ")
 console.log(map);
-var tree = makeShortestPathTree(new Location(3, 1), 4);
+var tree = makeShortestPathTree(new Location(3, 1), 2);
 console.log(JSON.stringify(getReversePathTo(tree, new Location(3, 1), new Location(4, 4))));
 
 //console.log(getOffsetsInRange(1));

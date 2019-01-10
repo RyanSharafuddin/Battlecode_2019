@@ -7,10 +7,6 @@ import * as navigation from './navigation.js'
 
 
 class MyRobot extends BCAbstractRobot {
-
-
-
-
 //TODO: For castles and churches, on turn 1, make list of available building locations
 //TODO: perhaps have castles and churches keep track off and tell units their order in turn queue??
   turn() {
@@ -34,7 +30,7 @@ class MyRobot extends BCAbstractRobot {
 
     switch (this.me.unit) {
       case SPECS.CASTLE:
-        //this.log("Castle. Turn: " + this.me.turn); TODO: uncomment
+        this.log("Castle. Turn: " + this.me.turn); 
         var audibleRobots = this.getVisibleRobots();
         var hearingSignal = false;
         if(this.me.turn === 1 ) {
