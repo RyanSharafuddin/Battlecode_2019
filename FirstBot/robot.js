@@ -36,6 +36,7 @@ class MyRobot extends BCAbstractRobot {
       case SPECS.CASTLE:
         if(this.me.turn == 1) {
           robotFunctions.rememberBuildableOffsets(this);
+          robotFunctions.rememberStartingConnectedComponents(this, this.buildableOffsets); //TODO remove if buggy
         }
         this.log("Castle. Turn: " + this.me.turn);
         //this.log("My corresponding enemy castle is at: " + JSON.stringify(navigation.reflectLocation(new Location(this.me.y, this.me.x), this.map.length, this.symmetryType)));
@@ -75,6 +76,7 @@ class MyRobot extends BCAbstractRobot {
         this.log("Church. Turn: " + this.me.turn);
         if(this.me.turn == 1) {
           robotFunctions.rememberBuildableOffsets(this);
+          robotFunctions.rememberStartingConnectedComponents(this, this.buildableOffsets); //TODO remove if buggy
         }
         break;
       case SPECS.PILGRIM:

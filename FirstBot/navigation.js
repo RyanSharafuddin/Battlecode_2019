@@ -78,6 +78,21 @@ export function getOffsetsInRange(movableRadius) {
       return reversedDirectionList;
   }
 
+  export function getLocsByCloseness(shortestPathTree, listOfLocs) {
+    //relative to a starting location and a shortest path tree, returns a list
+    //[[loc, cost], [loc, cost]] that is sorted by closeness
+    //TODO: test this function 
+    var newList = []
+     for(var i = 0; i < listOfLocs.length; i++) {
+       var loc = listOfLocs[i];
+       newList.push([loc, shortestPathTree[loc.y][loc.x][0]]);
+     }
+     newList.sort(function(a, b) {
+       return(a[1] - b[1]);
+     });
+     return newList;
+  }
+
   export function compareRow(maps, firstRow, secondRow) {
     //returns true if map[firstRow] = map[secondRow] for all maps in map
     var numMaps = maps.length;
