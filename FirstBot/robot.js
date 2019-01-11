@@ -14,6 +14,7 @@ class MyRobot extends BCAbstractRobot {
     if(this.me.turn == 1) {
       //TODO: optimize later to take advantage of map symmetry
       //TODO: perhaps sort this by nearest to furthest from bot?
+      this.symmetryType = navigation.getSymmetry([this.map, this.karbonite_map, this.fuel_map]);
       this.karbList = [];
       this.fuelList = []
       for(var y = 0; y < this.map.length; y++) {
@@ -30,7 +31,8 @@ class MyRobot extends BCAbstractRobot {
 
     switch (this.me.unit) {
       case SPECS.CASTLE:
-        this.log("Castle. Turn: " + this.me.turn); 
+        this.log("Castle. Turn: " + this.me.turn);
+        this.log("My corresponding enemy castle is at: " + JSON.stringify(navigation.reflectLocation(new Location(this.me.y, this.me.x), this.map.length, this.symmetryType)));
         var audibleRobots = this.getVisibleRobots();
         var hearingSignal = false;
         if(this.me.turn === 1 ) {

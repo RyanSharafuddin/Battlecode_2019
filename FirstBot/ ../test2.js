@@ -12,7 +12,7 @@ var map1 = [
 var map2 = [
   [3, 3, 3],
   [3, 3, 3],
-  [4, 4, 4,]
+  [4, 0, 4,]
 ];
 
 var map3 = [
@@ -22,4 +22,4 @@ var map3 = [
 ];
 
 var maps = [map1, map2, map3];
-console.log(navigation.compareColumn(maps, 0, 1));
+navigation.compareColumn(maps, 0, 1);

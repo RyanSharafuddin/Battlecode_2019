@@ -76,4 +76,71 @@ export function getOffsetsInRange(movableRadius) {
         currentLoc = new Location(currentLoc.y - offsetToGetHere[0], currentLoc.x - offsetToGetHere[1]);
       }
       return reversedDirectionList;
+  }
+
+  export function compareRow(maps, firstRow, secondRow) {
+    //returns true if map[firstRow] = map[secondRow] for all maps in map
+    var numMaps = maps.length;
+    for (var square = 0; square < maps[0].length; square++) {
+      for (var currentMap = 0; currentMap < numMaps; currentMap++) {
+        if(maps[currentMap][firstRow][square] !== maps[currentMap][secondRow][square]) {
+          return false;
+        }
+      }
     }
+    return true;
+  }
+
+  export function compareColumn(maps, firstColumn, secondColumn) {
+    //ditto above but for columns
+    var numMaps = maps.length;
+    for(var square = 0; square < maps[0].length; square++) {
+      for (var currentMap = 0; currentMap < numMaps; currentMap++) {
+        if(maps[currentMap][square][firstColumn] !== maps[currentMap][square][secondColumn]) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  export function getSymmetry(maps) {
+    //maps is [map, karbonite_map, fuel_map]
+    var length = maps[0].length;
+    var even = (length % 2) == 0;
+    var middle = Math.floor(length / 2);
+    for(var line = 0; line <= middle - 1; line++) {
+      if(!compareRow(maps, line, length - 1 - line)) {
+        return SymmetryEnum.VERTICAL; //vertical symmetry
+      }
+      if(!compareColumn(maps, line, length - 1 - line)) {
+        return SymmetryEnum.HORIZONTAL; //horizontal symmetry
+      }
+    }
+    return SymmetryEnum.INDETERMINATE;
+  }
+
+  export function reflectLocation(toReflect, mapLength, symmetryType) {
+    //given a location and symmetry type, reflects the location
+    var middle = Math.floor(mapLength / 2);
+    var even = (mapLength % 2 == 0) ? true : false;
+    var originalYOffsetFromMiddle = toReflect.y - middle;
+    var originalXOffsetFromMiddle = toReflect.x - middle;
+
+    if(even) {
+      var newYCoord = (symmetryType === SymmetryEnum.VERTICAL) ? toReflect.y : middle - originalYOffsetFromMiddle - 1;
+      var newXCoord = (symmetryType === SymmetryEnum.HORIZONTAL) ? toReflect.x : middle - originalXOffsetFromMiddle - 1;
+      return new Location(newYCoord, newXCoord);
+    }
+    else {
+      var newYCoord = (symmetryType === SymmetryEnum.VERTICAL) ? toReflect.y : middle - originalYOffsetFromMiddle;
+      var newXCoord = (symmetryType === SymmetryEnum.HORIZONTAL) ? toReflect.x : middle - originalXOffsetFromMiddle;
+      return new Location(newYCoord, newXCoord);
+    }
+  }
+
+  export var SymmetryEnum = {
+    HORIZONTAL: 0,
+    VERTICAL: 1,
+    INDETERMINATE: 2
+  };
