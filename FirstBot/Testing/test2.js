@@ -2,6 +2,7 @@ import {Queue} from '../Queue.js';
 import {Location} from '../Location.js';
 import * as utilities from '../utilities.js'
 import * as navigation from '../navigation.js'
+import * as robotFunctions from '../robotFunctions.js'
 
 var map1 = [
   [1, 1, 3],

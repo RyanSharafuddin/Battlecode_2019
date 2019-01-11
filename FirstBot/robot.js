@@ -3,12 +3,15 @@ import {Queue} from './Queue.js';
 import {Location} from './Location.js';
 import * as utilities from './utilities.js'
 import * as navigation from './navigation.js'
+import * as robotFunctions from './robotFunctions.js'
 
 
 
 class MyRobot extends BCAbstractRobot {
 //TODO: For castles and churches, on turn 1, make list of available building locations
 //TODO: perhaps have castles and churches keep track off and tell units their order in turn queue??
+
+
   turn() {
 
     if(this.me.turn == 1) {
@@ -31,8 +34,11 @@ class MyRobot extends BCAbstractRobot {
 
     switch (this.me.unit) {
       case SPECS.CASTLE:
+        if(this.me.turn == 1) {
+          robotFunctions.rememberBuildableOffsets(this);
+        }
         this.log("Castle. Turn: " + this.me.turn);
-        this.log("My corresponding enemy castle is at: " + JSON.stringify(navigation.reflectLocation(new Location(this.me.y, this.me.x), this.map.length, this.symmetryType)));
+        //this.log("My corresponding enemy castle is at: " + JSON.stringify(navigation.reflectLocation(new Location(this.me.y, this.me.x), this.map.length, this.symmetryType)));
         var audibleRobots = this.getVisibleRobots();
         var hearingSignal = false;
         if(this.me.turn === 1 ) {
@@ -67,6 +73,9 @@ class MyRobot extends BCAbstractRobot {
         break;
       case SPECS.CHURCH:
         this.log("Church. Turn: " + this.me.turn);
+        if(this.me.turn == 1) {
+          robotFunctions.rememberBuildableOffsets(this);
+        }
         break;
       case SPECS.PILGRIM:
         this.log("Pilgrim. Turn: " + this.me.turn);
