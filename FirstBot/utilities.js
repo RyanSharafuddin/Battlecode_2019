@@ -7,3 +7,12 @@ export function getMinIndex(arr) {
   }
   return minIndex;
 }
+
+export function dump(obj, state) {
+  state.log("{");
+  for(var i = 0; i < Object.keys(obj).length;i++) {
+    var key = Object.keys(obj)[i]
+    state.log(key + ": " + JSON.stringify(obj[key]));
+  }
+  state.log("}");
+}

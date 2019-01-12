@@ -130,21 +130,25 @@ function makeShortestPathTree(startLocation, movableRadius) {
 }
 
 function getReversePathTo(shortestPathTree, startLoc, endLoc) {
-  var reversedDirectionList = [];
-  var currentLoc = endLoc;
-  while(!currentLoc.equals(startLoc)) {
-    var offsetToGetHere = shortestPathTree[currentLoc.y][currentLoc.x][1];
-    reversedDirectionList.push(offsetToGetHere);
-    currentLoc = new Location(currentLoc.y - offsetToGetHere[0], currentLoc.x - offsetToGetHere[1]);
-  }
-  return reversedDirectionList;
+  //TODO: DEBUG case where endLoc not reachable from startLoc
+    var reversedDirectionList = []; //returns [dy, dx] offsets
+    var currentLoc = endLoc;
+    if(shortestPathTree[currentLoc.y][currentLoc.x] == null) {
+      return null; //there is no path because endLoc is unreachable
+    }
+    while(!currentLoc.equals(startLoc)) {
+      var offsetToGetHere = shortestPathTree[currentLoc.y][currentLoc.x][1];
+      reversedDirectionList.push(offsetToGetHere);
+      currentLoc = new Location(currentLoc.y - offsetToGetHere[0], currentLoc.x - offsetToGetHere[1]);
+    }
+    return reversedDirectionList;
 }
 
 var karbMap = undefined;
 var fuelMap = undefined;
 var map = [
   [true, true, true, true, true, true],
-  [true, false, false, false, true, true],
+  [false, false, false, false, true, true],
   [true, true, true, false, true, true],
   [true, true, true, false, true, true],
   [true, true, true, false, true, true],

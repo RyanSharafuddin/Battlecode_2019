@@ -1,16 +1,16 @@
 Testing!
 Map: 
 [ [ true, true, true, true, true, true ],
-  [ true, false, false, false, true, true ],
+  [ false, false, false, false, true, true ],
   [ true, true, true, false, true, true ],
   [ true, true, true, false, true, true ],
   [ true, true, true, false, true, true ],
   [ false, false, false, false, true, true ] ]
 Final costs: 
-[[3,[-1,0]],[3,[-1,1]],[4,[0,1]],[5,[0,1]],[6,[0,1]],[7,[0,1]]]
-[[2,[-1,0]],null,null,null,[6,[1,1]],[7,[1,1]]]
-[[1,[-1,-1]],[1,[-1,0]],[1,[-1,1]],null,[7,[1,0]],[7,[1,1]]]
-[[1,[0,-1]],[0,null],[1,[0,1]],null,[8,[1,0]],[8,[1,1]]]
-[[1,[1,-1]],[1,[1,0]],[1,[1,1]],null,[9,[1,0]],[9,[1,1]]]
-[null,null,null,null,[10,[1,0]],[10,[1,1]]]
-[[1,0],[1,0],[1,0],[1,1],[0,1],[0,1],[-1,1],[-1,0],[-1,-1]]
+[null,null,null,null,null,null]
+[null,null,null,null,null,null]
+[[1,[-1,-1]],[1,[-1,0]],[1,[-1,1]],null,null,null]
+[[1,[0,-1]],[0,null],[1,[0,1]],null,null,null]
+[[1,[1,-1]],[1,[1,0]],[1,[1,1]],null,null,null]
+[null,null,null,null,null,null]
+null
