@@ -45,44 +45,34 @@ export function getOffsetsInRange(movableRadius) {
     export function makeShortestPathTree(startLocation, movableRadius, map, extras) {
         //TODO: perhaps optimize later to stop once found nearest karbonite/fuel
         //location is just [y, x]
-        try {
-          var q = new Queue(4096);
-          q.enqueue(startLocation);
-          var blankRow = new Array(map.length);
-          var costs = [];
-          for (var i = 0; i < map.length; i++) {
-            costs.push(blankRow.slice());
-          }
-          costs[startLocation.y][startLocation.x] = [0, null]; //costs[y][x] = [numMoves, offset to get here from previous]
+        var q = new Queue(4096);
+        q.enqueue(startLocation);
+        var blankRow = new Array(map.length);
+        var costs = [];
+        for (var i = 0; i < map.length; i++) {
+          costs.push(blankRow.slice());
         }
-        catch (err) {
-          extras.state.log("The error is not in the queue loop");
-          extras.state.log("startLocation is: " + JSON.stringify(startLocation));
-        }
-        try {
-          while(!q.isEmpty()) {
-            var lookAt = q.dequeue();
-            var movableOffsets = getMovableOffsets(lookAt, getOffsetsInRange(movableRadius), map);
-            movableOffsets.forEach(function(offset) {
-              var locationToExamine = new Location(lookAt.y + offset[0], lookAt.x + offset[1]);
-              if(extras && extras.forbiddenLocs != undefined) {
-                //so far, the only thing in extras is a list of forbiddenLocs
-                for(var i = 0; i < extras.forbiddenLocs.length; i++) {
-                  if(locationToExamine.equals(extras.forbiddenLocs[i])) {
-                    return; //like a continue for the movableOffsets for loop. see https://stackoverflow.com/questions/31399411/go-to-next-iteration-in-javascript-foreach-loop/31399448
-                  }
+        costs[startLocation.y][startLocation.x] = [0, null]; //costs[y][x] = [numMoves, offset to get here from previous]
+
+        while(!q.isEmpty()) {
+          var lookAt = q.dequeue();
+          var movableOffsets = getMovableOffsets(lookAt, getOffsetsInRange(movableRadius), map);
+          movableOffsets.forEach(function(offset) {
+            var locationToExamine = new Location(lookAt.y + offset[0], lookAt.x + offset[1]);
+            if(extras && extras.forbiddenLocs != undefined) {
+              //so far, the only thing in extras is a list of forbiddenLocs
+              for(var i = 0; i < extras.forbiddenLocs.length; i++) {
+                if(locationToExamine.equals(extras.forbiddenLocs[i])) {
+                  return; //like a continue for the movableOffsets for loop. see https://stackoverflow.com/questions/31399411/go-to-next-iteration-in-javascript-foreach-loop/31399448
                 }
               }
+            }
 
-              if(costs[locationToExamine.y][locationToExamine.x] === undefined) {
-                costs[locationToExamine.y][locationToExamine.x] = [costs[lookAt.y][lookAt.x][0] + 1, offset];
-                q.enqueue(locationToExamine);
-              }
-            });
-          }
-        }
-        catch(err) {
-          extras.state.log("The error is in the queue loop");
+            if(costs[locationToExamine.y][locationToExamine.x] === undefined) {
+              costs[locationToExamine.y][locationToExamine.x] = [costs[lookAt.y][lookAt.x][0] + 1, offset];
+              q.enqueue(locationToExamine);
+            }
+          });
         }
         return costs;
       }

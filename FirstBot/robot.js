@@ -33,24 +33,15 @@ class MyRobot extends BCAbstractRobot {
           }
 
           var attackingLocations = attacker.attackableFrom(this.correspondingEnemyCastleLoc, RUSH_BOT, this.map);
-        //  try {
-            var offsetToUse = [this.startingConnectedComponents[0][0][0], this.startingConnectedComponents[0][0][1]];
-            var beginLoc = myLoc.addOffset(offsetToUse);
-            this.firstCCshortestPathTree = navigation.makeShortestPathTree(beginLoc, SPECS.UNITS[RUSH_BOT].SPEED, this.map, {state: this});
-        //  }
-          // catch(err) {
-          //   this.log("Error caught around line 40!!!")
-          //   this.log("this.startingConnectedComponents: " + JSON.stringify(this.startingConnectedComponents));
-          // }
+
+          var offsetToUse = [this.startingConnectedComponents[0][0][0], this.startingConnectedComponents[0][0][1]];
+          var beginLoc = myLoc.addOffset(offsetToUse);
+          this.firstCCshortestPathTree = navigation.makeShortestPathTree(beginLoc, SPECS.UNITS[RUSH_BOT].SPEED, this.map, {state: this});
+
           if(this.startingConnectedComponents[1].length !== 0) {
-            try {
-              var offsetToUse = [this.startingConnectedComponents[1][0][0], this.startingConnectedComponents[1][0][1]];
-              var beginLoc = myLoc.addOffset(offsetToUse);
-              this.secondCCshortestPathTree = navigation.makeShortestPathTree(beginLoc, SPECS.UNITS[RUSH_BOT].SPEED, this.map);
-            }
-            catch(err) {
-              this.log("ERROR ERROR ERROR!");
-            }
+            var offsetToUse = [this.startingConnectedComponents[1][0][0], this.startingConnectedComponents[1][0][1]];
+            var beginLoc = myLoc.addOffset(offsetToUse);
+            this.secondCCshortestPathTree = navigation.makeShortestPathTree(beginLoc, SPECS.UNITS[RUSH_BOT].SPEED, this.map);
             secondCCListofLocsByCloseness = navigation.getLocsByCloseness(this.secondCCshortestPathTree, attackingLocations);
           }
           var firstCCListofLocsByCloseness = navigation.getLocsByCloseness(this.firstCCshortestPathTree, attackingLocations);
