@@ -33,10 +33,24 @@ class MyRobot extends BCAbstractRobot {
           }
 
           var attackingLocations = attacker.attackableFrom(this.correspondingEnemyCastleLoc, RUSH_BOT, this.map);
-
-          this.firstCCshortestPathTree = navigation.makeShortestPathTree(new Location(this.startingConnectedComponents[0][0][0], this.startingConnectedComponents[0][0][1]), SPECS.UNITS[RUSH_BOT].SPEED, this.map);
+        //  try {
+            var offsetToUse = [this.startingConnectedComponents[0][0][0], this.startingConnectedComponents[0][0][1]];
+            var beginLoc = myLoc.addOffset(offsetToUse);
+            this.firstCCshortestPathTree = navigation.makeShortestPathTree(beginLoc, SPECS.UNITS[RUSH_BOT].SPEED, this.map, {state: this});
+        //  }
+          // catch(err) {
+          //   this.log("Error caught around line 40!!!")
+          //   this.log("this.startingConnectedComponents: " + JSON.stringify(this.startingConnectedComponents));
+          // }
           if(this.startingConnectedComponents[1].length !== 0) {
-            this.secondCCshortestPathTree = navigation.makeShortestPathTree(new Location(this.startingConnectedComponents[1][0][0], this.startingConnectedComponents[1][0][1]), SPECS.UNITS[RUSH_BOT].SPEED, this.map);
+            try {
+              var offsetToUse = [this.startingConnectedComponents[1][0][0], this.startingConnectedComponents[1][0][1]];
+              var beginLoc = myLoc.addOffset(offsetToUse);
+              this.secondCCshortestPathTree = navigation.makeShortestPathTree(beginLoc, SPECS.UNITS[RUSH_BOT].SPEED, this.map);
+            }
+            catch(err) {
+              this.log("ERROR ERROR ERROR!");
+            }
             secondCCListofLocsByCloseness = navigation.getLocsByCloseness(this.secondCCshortestPathTree, attackingLocations);
           }
           var firstCCListofLocsByCloseness = navigation.getLocsByCloseness(this.firstCCshortestPathTree, attackingLocations);
@@ -155,6 +169,7 @@ class MyRobot extends BCAbstractRobot {
         break;
       case SPECS.CRUSADER:
         this.log("Crusader. Turn: " + this.me.turn);
+        this.log("My id is: " + this.me.id);
         this.spawnedFrom = null; //TODO reprogram to take into account churches
         if(this.me.turn == 1) {
           for(var i = 0; i < ADJACENT.length; i++) {
@@ -194,6 +209,15 @@ class MyRobot extends BCAbstractRobot {
               this.log("ERROR ERROR ERROR");
             }
           }
+        }
+        //After turn 1 setup, before anything else (i.e. in all modes)
+        var attackable = attacker.getAttackableRobots(this);
+        if(attackable.length > 0) {
+          this.log("My Loc is: " + JSON.stringify(myLoc));
+          attacker.prioritizeAttackableByUnit(attackable)
+          this.log("There are units I can attack. Prioritized by unit, they are: ");
+          this.log(JSON.stringify(attackable));
+          return this.attack(attackable[0].x - this.me.x, attackable[0].y - this.me.y);
         }
         if(this.mode == MODE.PATROL) {
           //TODO patrol code

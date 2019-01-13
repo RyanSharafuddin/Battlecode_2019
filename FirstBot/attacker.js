@@ -21,3 +21,32 @@ export function isOffsetInAttackingRange(offset, unit) {
   return( (offset[0]**2 + offset[1]**2 <= SPECS.UNITS[unit].ATTACK_RADIUS[1]) &&
   (offset[0]**2 + offset[1]**2 >= SPECS.UNITS[unit].ATTACK_RADIUS[0]) );
 }
+
+export function getAttackableRobots(state) {
+  //TODO: debug this and below function
+  var attackableRobots = [];
+  var accessibleRobots = state.getVisibleRobots();
+  for(var i = 0; i < accessibleRobots.length; i++) {
+    var accessibleRobot = accessibleRobots[i];
+    if(state.isVisible(accessibleRobot) && (accessibleRobot.team != state.me.team) &&
+        isOffsetInAttackingRange([accessibleRobot.y - state.me.y, accessibleRobot.x - state.me.x], state.me.unit)) {
+        attackableRobots.push(accessibleRobot);
+    }
+  }
+  return attackableRobots;
+}
+
+export function prioritizeAttackableByUnit(attackableRobots) {
+  //sorts list of attackable units according to priority units (changes list)
+  //TODO consider how to priortize attackable list
+  var PRIORITY_LIST = [];
+  PRIORITY_LIST[SPECS.CASTLE] = 0; //highest priority to attack
+  PRIORITY_LIST[SPECS.CHURCH] = 1;
+  PRIORITY_LIST[SPECS.PREACHER] = 2;
+  PRIORITY_LIST[SPECS.PROPHET] = 3;
+  PRIORITY_LIST[SPECS.CRUSADER] = 4;
+  PRIORITY_LIST[SPECS.PILGRIM] = 5;
+  attackableRobots.sort(function(a, b) {
+    return PRIORITY_LIST[a.unit] - PRIORITY_LIST[b.unit]
+  });
+}
