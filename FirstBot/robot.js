@@ -213,6 +213,9 @@ class MyRobot extends BCAbstractRobot {
           this.log("Crusader @ " + JSON.stringify(myLoc) + " and is in patrol mode");
           return null;
         }
+        if(this.mode == MODE.WAIT) {
+          return null; //TODO: Implement
+        }
         if(this.mode == MODE.GO_TO_TARGET) {
           this.log("Crusader @ " + JSON.stringify(myLoc) + " and is in GO_TO_TARGET mode");
           this.log("targetList: " + JSON.stringify(this.targetList));
@@ -264,7 +267,7 @@ class MyRobot extends BCAbstractRobot {
                     var idAtPotentialTarget = navigation.idAtOffset([potentialTargetLoc.y - myLoc.y, potentialTargetLoc.x - myLoc.x], this);
                   }
                   catch (err) {
-                    this.log("WTF??? See line 265");
+                    this.log("caught err WTF??? See line 265");
                   }
                   //if potential target is visible and no robot there or invisible, go there.
                   //if robot there and enemy, start heading there. //TODO consider staying out of its attack radius
@@ -306,7 +309,12 @@ class MyRobot extends BCAbstractRobot {
                     this.log("New path to target is: " + JSON.stringify(this.pathToTarget));
                     if(this.pathToTarget == null) {
                       this.log("My Loc is: " + JSON.stringify(myLoc) + "and all paths to target blocked by friendly robots");
+                      this.mode = MODE.WAIT; //TODO: context switch here; remember old state.
                       return null; //waiting??? Or switch to patrol? Or what?? TODO: something intelligent
+                    }
+                    if(this.pathToTarget.length == 1) {
+                      this.log("Reaching target after this move; switching to patrol mode");
+                      this.mode = MODE.PATROL;
                     }
                     return this.move(this.pathToTarget[0][1], this.pathToTarget[0][0]);
             //---------------------------------COPIED---------------------------------------------------------------
@@ -355,7 +363,12 @@ class MyRobot extends BCAbstractRobot {
                 this.log(JSON.stringify(this.pathToTarget));
                 if(this.pathToTarget == null) {
                   this.log("My Loc is: " + JSON.stringify(myLoc) + " and Path to target " + JSON.stringify(this.targetList[this.currentTargetIndex]) + " blocked by friendly robots");
+                  this.mode = MODE.WAIT; //TODO: context switch here; remember old state.
                   return null; //waiting??? Or switch to patrol? Or what?? TODO: something intelligent
+                }
+                if(this.pathToTarget.length == 1) {
+                  this.log("Reaching target after this move; switching to patrol mode");
+                  this.mode = MODE.PATROL;
                 }
                 return this.move(this.pathToTarget[0][1], this.pathToTarget[0][0]);
   //---------------------------------COPIED---------------------------------------------------------------
@@ -416,4 +429,6 @@ const MODE = {
   DO_NOTHING: 1,
   GO_TO_TARGET: 2,
   PATROL: 3,
+  WAIT: 4 //currently this does nothing. TODO: implement state machine remembrance and switching and context
+          //TODO consider moving around randomly a bit during waiting. Or maybe patrolling a bit.
 }
