@@ -159,20 +159,7 @@ class MyRobot extends BCAbstractRobot {
         if(this.me.turn == 1) {
           for(var i = 0; i < ADJACENT.length; i++) {
             var offset = ADJACENT[i];
-            try {
-              var id = navigation.idAtOffset(offset, this);
-            }
-            catch (err) {
-              this.log("Caught ERR around line 163");
-              this.logList(["Crusader at myLoc: ", myLoc, "problemOffset: ", offset]);
-              var debugObj = {
-                myLoc: myLoc,
-                problemOffset: offset,
-              }
-              //this.log(JSON.stringify(debugObj))
-              // this.log("Crusader at: " + JSON.stringify(myLoc));
-              // this.log("Potential problem offset is: " + JSON.stringify(offset));
-            }
+            var id = navigation.idAtOffset(offset, this);
             if(id > 0) {
               var bot = this.getRobot(id);
               if(bot.unit == SPECS.CASTLE && bot.team == this.me.team) {
@@ -217,48 +204,29 @@ class MyRobot extends BCAbstractRobot {
           return null; //TODO: Implement
         }
         if(this.mode == MODE.GO_TO_TARGET) {
-          this.log("Crusader @ " + JSON.stringify(myLoc) + " and is in GO_TO_TARGET mode");
-          this.log("targetList: " + JSON.stringify(this.targetList));
-          this.log("currentTargetIndex is: " + JSON.stringify(this.currentTargetIndex));
-          this.log("pathToTarget is: " + JSON.stringify(this.pathToTarget));
-          this.log("numMoveToMake this turn: " + JSON.stringify(this.numMoveToMake));
-          this.log("location I'd be in if I made this move: " + JSON.stringify(myLoc.addOffset(this.pathToTarget[this.numMoveToMake])));
+          // this.log("Crusader @ " + JSON.stringify(myLoc) + " and is in GO_TO_TARGET mode");
+          // this.log("targetList: " + JSON.stringify(this.targetList));
+          // this.log("currentTargetIndex is: " + JSON.stringify(this.currentTargetIndex));
+          // this.log("pathToTarget is: " + JSON.stringify(this.pathToTarget));
+          // this.log("numMoveToMake this turn: " + JSON.stringify(this.numMoveToMake));
+          // this.log("location I'd be in if I made this move: " + JSON.stringify(myLoc.addOffset(this.pathToTarget[this.numMoveToMake])));
           var moveToMake = this.pathToTarget[this.numMoveToMake];
-          try {
-            var idAtMove = navigation.idAtOffset(moveToMake, this);
-          }
-          catch (err) {
-            //this.log(err);
-            this.log("Caught ERR around line 213");
-            (moveToMake == undefined) ? this.log("moveToMake is undefined") : this.log(JSON.stringify(moveToMake));
-            this.log("numMoveToMake: " + this.numMoveToMake);
-            this.log("pathToTarget: " + JSON.stringify(this.pathToTarget));
-            this.logList(["Crusader at myLoc: ", myLoc, "problemOffset: ", moveToMake, "targetList", this.targetList]);
-            var debugObj = {
-              myLoc: myLoc,
-              problemOffset: offset,
-              targetList: this.targetList
-            }
-            //this.log(JSON.stringify(debugObj));
-            // this.log("Crusader at: " + JSON.stringify(myLoc));
-            // this.log("Potential problem offset is: " + JSON.stringify(offset));
-            // this.log("The movableOffsets list is: " + JSON.stringify(movableOffsets))
-          }
+          var idAtMove = navigation.idAtOffset(moveToMake, this);
           var botAtMove;
           if(idAtMove > 0) {
-            this.log("There is a robot at the loc I wish to move to, which is: " + JSON.stringify(myLoc.addOffset(this.pathToTarget[this.numMoveToMake])));
+            // this.log("There is a robot at the loc I wish to move to, which is: " + JSON.stringify(myLoc.addOffset(this.pathToTarget[this.numMoveToMake])));
             botAtMove = this.getRobot(idAtMove);
             var friendlyAtMove = (botAtMove.team == this.me.team);
             if(friendlyAtMove) {
-              this.log("The aforementioned bot is friendly");
+              // this.log("The aforementioned bot is friendly");
               if(this.numMoveToMake == this.pathToTarget.length - 1) { //were about to move to target and is blocked by friendly bot
-                this.log("My loc is: " + JSON.stringify(myLoc) + " and I was about to move to end (meaning attacker) target: " + JSON.stringify(myLoc.addOffset(moveToMake)) + " and it was blocked by friendly bot");
-                this.log("Am now considering new attacker target");
+                // this.log("My loc is: " + JSON.stringify(myLoc) + " and I was about to move to end (meaning attacker) target: " + JSON.stringify(myLoc.addOffset(moveToMake)) + " and it was blocked by friendly bot");
+                // this.log("Am now considering new attacker target");
                 var lookingForTarget = true;
                 while(lookingForTarget) {
                   this.currentTargetIndex += 1;
                   if(this.currentTargetIndex >= this.targetList.length) {
-                    this.log("All locs from which to attack enemy castle were surrounded by friendlies; switching to patrol");
+                    // this.log("All locs from which to attack enemy castle were surrounded by friendlies; switching to patrol");
                     this.mode = MODE.PATROL; //TODO: make switchToPatrol (and other modes) function, make patrol mode
                     return null; //or break out of looking for target and do something else?
                   }
@@ -267,53 +235,36 @@ class MyRobot extends BCAbstractRobot {
                     var idAtPotentialTarget = navigation.idAtOffset([potentialTargetLoc.y - myLoc.y, potentialTargetLoc.x - myLoc.x], this);
                   }
                   catch (err) {
-                    this.log("caught err WTF??? See line 265");
+                    this.log("caught err WTF??? See line 238");
                   }
                   //if potential target is visible and no robot there or invisible, go there.
                   //if robot there and enemy, start heading there. //TODO consider staying out of its attack radius
                   if( (idAtPotentialTarget <= 0) || (this.getRobot(idAtPotentialTarget).team != this.me.team)) {
-                    this.log("Going to new target @ " + JSON.stringify(potentialTargetLoc));
+                    // this.log("Going to new target @ " + JSON.stringify(potentialTargetLoc));
 
 
             //---------------------------------COPIED---------------------------------------------------------------
                     var movableOffsets = navigation.getMovableOffsets(myLoc, navigation.getOffsetsInRange(SPECS.UNITS[SPECS.CRUSADER].SPEED), this.map);
                     var forbiddenLocs = []; //make list of locations can't go to for costs tree
                     movableOffsets.forEach(function(offset) {
-                      try { //TODO remove try catch
-                        var id = navigation.idAtOffset(offset, this);
-                      }
-                      catch (err) {
-                        //this.log(err);
-                        this.log("Caught ERR around line 282");
-                        this.logList(["Crusader at myLoc: ", myLoc, "problemOffset: ", offset, "movableOffsets", movableOffsets, "targetList", this.targetList]);
-                        var debugObj = {
-                          myLoc: myLoc,
-                          problemOffset: offset,
-                          movableOffsets: movableOffsets,
-                          targetList: this.targetList
-                        }
-                        //this.log(JSON.stringify(debugObj));
-                        // this.log("Crusader at: " + JSON.stringify(myLoc));
-                        // this.log("Potential problem offset is: " + JSON.stringify(offset));
-                        // this.log("The movableOffsets list is: " + JSON.stringify(movableOffsets))
-                      }
+                      var id = navigation.idAtOffset(offset, this);
                       if((id > 0) && (this.getRobot(id).team == this.me.team)) { //if there is a friendly bot on that square
                         forbiddenLocs.push(myLoc.addOffset(offset));
                       }
                     }.bind(this));
-                    this.log("Places that I could move to but have friendly bots on them: ");
-                    this.log(JSON.stringify(forbiddenLocs));
+                    // this.log("Places that I could move to but have friendly bots on them: ");
+                    // this.log(JSON.stringify(forbiddenLocs));
                     var costs = navigation.makeShortestPathTree(myLoc, SPECS.UNITS[SPECS.CRUSADER].SPEED, this.map, {forbiddenLocs: forbiddenLocs});
                     this.pathToTarget = navigation.getPathTo(costs, myLoc, potentialTargetLoc);
                     this.numMoveToMake = 1;
-                    this.log("New path to target is: " + JSON.stringify(this.pathToTarget));
+                    // this.log("New path to target is: " + JSON.stringify(this.pathToTarget));
                     if(this.pathToTarget == null) {
-                      this.log("My Loc is: " + JSON.stringify(myLoc) + "and all paths to target blocked by friendly robots");
+                      // this.log("My Loc is: " + JSON.stringify(myLoc) + "and all paths to target blocked by friendly robots");
                       this.mode = MODE.WAIT; //TODO: context switch here; remember old state.
                       return null; //waiting??? Or switch to patrol? Or what?? TODO: something intelligent
                     }
                     if(this.pathToTarget.length == 1) {
-                      this.log("Reaching target after this move; switching to patrol mode");
+                      // this.log("Reaching target after this move; switching to patrol mode");
                       this.mode = MODE.PATROL;
                     }
                     return this.move(this.pathToTarget[0][1], this.pathToTarget[0][0]);
@@ -325,32 +276,13 @@ class MyRobot extends BCAbstractRobot {
               else { //friendly bot where I want to move, but weren't about to move to target
               //recalculate path, without stepping on friendly robots within moving radius
               //set up mode variables and make the move
-              this.log("There is a friendly bot where I was about to move, but it wasn't an end target. recalculating path");
+              // this.log("There is a friendly bot where I was about to move, but it wasn't an end target. recalculating path");
 //---------------------------------COPIED---------------------------------------------------------------
               //TODO: Make function friendsICanMoveTo (to keep out of costs tree)---------------------
                 var movableOffsets = navigation.getMovableOffsets(myLoc, navigation.getOffsetsInRange(SPECS.UNITS[SPECS.CRUSADER].SPEED), this.map);
                 var forbiddenLocs = []; //make list of locations can't go to for costs tree
                 movableOffsets.forEach(function(offset) {
-                  try { //TODO: remove try catch
-                    var id = navigation.idAtOffset(offset, this);
-                  }
-                  catch (err) {
-                    //this.log(err);
-                    this.log("Caught ERR around line 274");
-                    this.logList(["Crusader at myLoc: ", myLoc, "problemOffset: ", offset, "movableOffsets", movableOffsets, "targetList", this.targetList]);
-                    var debugObj = {
-                      myLoc: myLoc,
-                      problemOffset: offset,
-                      movableOffsets: movableOffsets,
-                      targetList: this.targetList
-                    }
-                    //this.log(JSON.stringify(debugObj));
-                    // this.log("Crusader at: " + JSON.stringify(myLoc));
-                    // this.log("Potential problem offset is: " + JSON.stringify(offset));
-                    // this.log("The movableOffsets list is: " + JSON.stringify(movableOffsets))
-                  }
-
-
+                  var id = navigation.idAtOffset(offset, this);
                   if((id > 0) && (this.getRobot(id).team == this.me.team)) { //if there is a friendly bot on that square
                     forbiddenLocs.push(myLoc.addOffset(offset));
                   }
@@ -359,15 +291,15 @@ class MyRobot extends BCAbstractRobot {
                 var costs = navigation.makeShortestPathTree(myLoc, SPECS.UNITS[SPECS.CRUSADER].SPEED, this.map, {forbiddenLocs: forbiddenLocs});
                 this.pathToTarget = navigation.getPathTo(costs, myLoc, this.targetList[this.currentTargetIndex]); //WARNING: this line not copied
                 this.numMoveToMake = 1;
-                this.log("My new path to target: " + JSON.stringify(this.targetList[this.currentTargetIndex]) + "is: ");
-                this.log(JSON.stringify(this.pathToTarget));
+                // this.log("My new path to target: " + JSON.stringify(this.targetList[this.currentTargetIndex]) + "is: ");
+                // this.log(JSON.stringify(this.pathToTarget));
                 if(this.pathToTarget == null) {
-                  this.log("My Loc is: " + JSON.stringify(myLoc) + " and Path to target " + JSON.stringify(this.targetList[this.currentTargetIndex]) + " blocked by friendly robots");
+                  // this.log("My Loc is: " + JSON.stringify(myLoc) + " and Path to target " + JSON.stringify(this.targetList[this.currentTargetIndex]) + " blocked by friendly robots");
                   this.mode = MODE.WAIT; //TODO: context switch here; remember old state.
                   return null; //waiting??? Or switch to patrol? Or what?? TODO: something intelligent
                 }
                 if(this.pathToTarget.length == 1) {
-                  this.log("Reaching target after this move; switching to patrol mode");
+                  // this.log("Reaching target after this move; switching to patrol mode");
                   this.mode = MODE.PATROL;
                 }
                 return this.move(this.pathToTarget[0][1], this.pathToTarget[0][0]);
@@ -385,9 +317,9 @@ class MyRobot extends BCAbstractRobot {
           else { //there is no bot where I want to move
             //TODO: consider doing something else if can see enemy bot outside your
             //      own attack radius and you are about to step into its attack radius
-            this.log("There is no bot where I want to move.");
+            // this.log("There is no bot where I want to move.");
             this.numMoveToMake += 1;
-            this.log("The next numMoveToMake is: " + this.numMoveToMake);
+            // this.log("The next numMoveToMake is: " + this.numMoveToMake);
             if(this.numMoveToMake == this.pathToTarget.length) { //TODO: correct index???
               this.log("WILL HAVE REACHED target after making this move; switching to patrol mode"); //TODO: make switching to mode functions
               this.mode = MODE.PATROL; //NOTE: do not return here; still need to make this move
