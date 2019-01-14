@@ -103,7 +103,7 @@ export function getOffsetsInRange(movableRadius) {
      }
      newList.sort(function(a, b) {
        //DEBUG if both infinty, return 0
-       if( a == Number.POSITIVE_INFINITY && b == Number.POSITIVE_INFINITY){
+       if( a[1] == Number.POSITIVE_INFINITY && b[1] == Number.POSITIVE_INFINITY){
          return 0;
        }
        return(a[1] - b[1]);

@@ -72,8 +72,11 @@ function makeShortestPathsTree(startLocation, movableRadius, map, extras) {
   function backTrackAllShortestPaths(solutions, currentSolution, costs, endLoc) {
     (currentSolution.length == 0) ? currentSolution = [endLoc] : currentSolution = currentSolution;
     var lastLoc = currentSolution[currentSolution.length - 1];
+    if(!costs[lastLoc.y][lastLoc.x]) { //if there's no entry in the costs grid here, then there are no paths to endLoc
+      return [];
+    }
     if(costs[lastLoc.y][lastLoc.x][1].length == 0) {
-      return solutions.push(currentSolution);
+      return solutions.push(currentSolution.reverse()); //each path is reversed, so reverse it before adding it on
     }
     var extensions = costs[lastLoc.y][lastLoc.x][1];
     extensions.forEach(function(extension) {
@@ -90,16 +93,10 @@ function makeShortestPathsTree(startLocation, movableRadius, map, extras) {
     })
   }
 
-  // var map = [
-  //   [true, true, true],
-  //   [true, true, true],
-  //   [true, true, true]
-  // ];
-
   var map = [
-    [true, true, true],
-    [true, true, true],
-    [true, true, true]
+    [true, true, false],
+    [false, true, true],
+    [false, true, true]
   ];
   var costs = makeShortestPathsTree(new Location(0,0), 1, map)
   utilities.dump(costs, console);
@@ -107,7 +104,7 @@ function makeShortestPathsTree(startLocation, movableRadius, map, extras) {
   console.log("PRINTING ALL PATHS");
   var i = 1;
   paths.forEach(function(path) {
-    console.log(i + ": " + JSON.stringify(path.reverse()) + "\n");
+    console.log(i + ": " + JSON.stringify(path) + "\n");
     i++;
   })
 
