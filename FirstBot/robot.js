@@ -51,10 +51,14 @@ class MyRobot extends BCAbstractRobot {
 
       case SPECS.PROPHET:
         this.log("Prophet. Turn: " + this.me.turn);
+        robotFunctions.rusherInitialize(this);
+        return robotFunctions.rusherTurn(this);
         break;
 
       case SPECS.PREACHER:
         this.log("Preacher. Turn: " + this.me.turn);
+        robotFunctions.rusherInitialize(this);
+        return robotFunctions.rusherTurn(this);
         break;
       default:
     }
