@@ -13,4 +13,16 @@ export class Location {
     return (new Location(this.y + offset[0], this.x + offset[1]));
   }
 
+  isInList(lst) {
+    for(var i = 0; i < lst.length; i++) {
+      if(this.equals(lst[i])) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  toString() {
+    return "{y: " + this.y + " x: " + this.x + "}";
+  }
 }

@@ -1,6 +1,7 @@
 import {Queue} from './Queue.js';
 import {Location} from './Location.js';
 import * as utilities from './utilities.js'
+import * as CONSTANTS from './universalConstants.js'
 
 export function getOffsetsInRange(movableRadius) {
   //given movableRadius, returns a list of [dy, dx] that can move
@@ -12,14 +13,12 @@ export function getOffsetsInRange(movableRadius) {
     }
     for (var xMove = -biggestStraightMove; xMove <= biggestStraightMove; xMove++) {
       for(var yMove = 0; (xMove ** 2) + (yMove ** 2) <= movableRadius; yMove++) {
-        if((yMove === 0) && (xMove === 0)) {
-          continue;
+        if( !((yMove === 0) && (xMove === 0)) ) {
+          offsetsInRange.push([yMove, xMove]);
         }
-        offsetsInRange.push([yMove, xMove]);
-        if(yMove === 0) {
-          continue;
+        if(yMove !== 0) {
+          offsetsInRange.push([-yMove, xMove]);
         }
-        offsetsInRange.push([-yMove, xMove]);
       }
     }
     return offsetsInRange;
@@ -42,16 +41,44 @@ export function getOffsetsInRange(movableRadius) {
       });
     }
 
+    export function getOccupiedMovableOffsets(state, maxSpeed, settings) { //settings is {enemy: true/false, friendly: true/false}
+    //TODO DEBUG
+      state.log("In function getOccupiedMovableOffsets");
+      state.log("maxSpeed is : " + maxSpeed);
+      if( (settings === undefined) || (settings.friendly === undefined) || (settings.enemy === undefined)) {
+        throw "Forgot arguments to getOccupiedMovableOffsets";
+      }
+      var results = [];
+      var movableOffsets = getMovableOffsets(state.myLoc, getOffsetsInRange(maxSpeed), state.map);
+      // state.log("All movable (but potentially occupied) offsets are: ");
+      // state.log(JSON.stringify(movableOffsets));
+      for(var i = 0; i < movableOffsets.length; i++) {
+        var offset = movableOffsets[i];
+        // state.log("Considering offset: " + JSON.stringify(offset));
+        var id = idAtOffset(offset, state);
+        if(id <= 0) {
+          continue;
+        }
+        // state.log("In function getOccupiedMovableOffsets");
+        // state.log("occupier team is: " + state.getRobot(id).team)
+        // state.log("my team is: " + state.me.team)
+        var occupierTeam = state.getRobot(id).team;
+        var fulfillsFriendly = ((occupierTeam === state.me.team) && settings.friendly);
+        var fulfillsEnemy = ((occupierTeam !== state.me.team) && settings.enemy);
+        // state.log("fulfillsEnemy: " + fulfillsEnemy);
+        // state.log("fulfillsFriendly: " + fulfillsFriendly);
+        if(fulfillsEnemy || fulfillsFriendly) {
+          results.push(offset);
+        }
+      }
+      return results;
+    }
+
     export function makeShortestPathTree(startLocation, movableRadius, map, extras) {
         //TODO: perhaps optimize later to stop once found nearest karbonite/fuel
-        //location is just [y, x]
         var q = new Queue(4096);
         q.enqueue(startLocation);
-        var blankRow = new Array(map.length);
-        var costs = [];
-        for (var i = 0; i < map.length; i++) {
-          costs.push(blankRow.slice());
-        }
+        var costs = utilities.makeSquareGrid(map.length, null);
         costs[startLocation.y][startLocation.x] = [0, null]; //costs[y][x] = [numMoves, offset to get here from previous]
 
         while(!q.isEmpty()) {
@@ -59,16 +86,10 @@ export function getOffsetsInRange(movableRadius) {
           var movableOffsets = getMovableOffsets(lookAt, getOffsetsInRange(movableRadius), map);
           movableOffsets.forEach(function(offset) {
             var locationToExamine = new Location(lookAt.y + offset[0], lookAt.x + offset[1]);
-            if(extras && extras.forbiddenLocs != undefined) {
-              //so far, the only thing in extras is a list of forbiddenLocs
-              for(var i = 0; i < extras.forbiddenLocs.length; i++) {
-                if(locationToExamine.equals(extras.forbiddenLocs[i])) {
-                  return; //like a continue for the movableOffsets for loop. see https://stackoverflow.com/questions/31399411/go-to-next-iteration-in-javascript-foreach-loop/31399448
-                }
-              }
+            if( (extras) && (extras.forbiddenLocs != undefined) && locationToExamine.isInList(extras.forbiddenLocs)) {
+              return; //like a continue for the movableOffsets for loop. see https://stackoverflow.com/questions/31399411/go-to-next-iteration-in-javascript-foreach-loop/31399448
             }
-
-            if(costs[locationToExamine.y][locationToExamine.x] === undefined) {
+            if(costs[locationToExamine.y][locationToExamine.x] === null) {
               costs[locationToExamine.y][locationToExamine.x] = [costs[lookAt.y][lookAt.x][0] + 1, offset];
               q.enqueue(locationToExamine);
             }
@@ -77,19 +98,36 @@ export function getOffsetsInRange(movableRadius) {
         return costs;
       }
 
-  export function getPathTo(shortestPathTree, startLoc, endLoc) {
-    //TODO: DEBUG case where endLoc not reachable from startLoc (done, I think)
-      var reversedDirectionList = []; //returns [dy, dx] offsets
-      var currentLoc = endLoc;
-      if(shortestPathTree[currentLoc.y][currentLoc.x] == null) {
-        return null; //there is no path because endLoc is unreachable
-      }
-      while(!currentLoc.equals(startLoc)) {
-        var offsetToGetHere = shortestPathTree[currentLoc.y][currentLoc.x][1];
-        reversedDirectionList.push(offsetToGetHere);
-        currentLoc = new Location(currentLoc.y - offsetToGetHere[0], currentLoc.x - offsetToGetHere[1]);
-      }
-      return reversedDirectionList.reverse();
+  export function getPathTo(shortestPathTree, startLoc, endLoc, state) {
+    if(shortestPathTree === undefined) {
+      state.log("ERROR: shortestPathTree is undefined!")
+    }
+    // try {
+      //TODO: DEBUG case where endLoc not reachable from startLoc (done, I think)
+        var reversedDirectionList = []; //returns [dy, dx] offsets
+        var currentLoc = endLoc;
+        if(shortestPathTree[currentLoc.y] === undefined) {
+          state.log("ERROR: shortestPathTree is not made!")
+          state.log(utilities.pretty(shortestPathTree));
+        }
+        else {
+          state.log("shortestPathTree is made");
+        }
+        if(shortestPathTree[currentLoc.y][currentLoc.x] == null) {
+          return null; //there is no path because endLoc is unreachable
+        }
+        while(!currentLoc.equals(startLoc)) {
+          var offsetToGetHere = shortestPathTree[currentLoc.y][currentLoc.x][1];
+          reversedDirectionList.push(offsetToGetHere);
+          currentLoc = new Location(currentLoc.y - offsetToGetHere[0], currentLoc.x - offsetToGetHere[1]);
+        }
+        return reversedDirectionList.reverse();
+    // }
+    // catch (err) {
+    //   state.log(utilities.pretty(shortestPathTree));
+    //   state.log(utilities.pretty(startLoc));
+    //   state.log(utilities.pretty(endLoc));
+    // }
   }
 
   export function getLocsByCloseness(shortestPathTree, listOfLocs) {
@@ -187,6 +225,33 @@ export function getOffsetsInRange(movableRadius) {
       return -1;
     }
     return (state.getVisibleRobotMap()[newY][newX]);
+  }
+
+  export function isOffsetUnoccupied(offset, state) {
+    var id = idAtOffset(offset, state);
+    if(id == -1) {
+      throw "error: offset is invisible or offmap"
+    }
+    return (id == 0);
+  }
+
+  export function getLocsFromOffsets(offsetsLst, referenceLoc) {
+    //given a list of offsets and a reference Location, returns a list of Locations
+    var locLst = [];
+    for(var i = 0; i < offsetsLst.length; i++) {
+      locLst.push(referenceLoc.addOffset(offsetsLst[i]));
+    }
+    return locLst;
+  }
+
+  export function getOffsetsFromLocs(locLst, referenceLoc) {
+    //inverse of above
+    var offsetLst = []
+    for(var i = 0; i < locLst.length; i++) {
+      var currentLoc = locLst[i];
+      offsetLst.push([currentLoc.y - referenceLoc.y, currentLoc.x - referenceLoc.x]);
+    }
+    return offsetLst;
   }
 
   export var SymmetryEnum = {

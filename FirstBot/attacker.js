@@ -3,7 +3,8 @@ import {Queue} from './Queue.js';
 import {Location} from './Location.js';
 import * as utilities from './utilities.js'
 import * as navigation from './navigation.js'
-import * as robotFunctions from './robotFunctions.js'
+//import * as robotFunctions from './robotFunctions.js' robotFunctions depends on this
+import * as CONSTANTS from './universalConstants.js'
 
 export function attackableFrom(locToAttack, unit, map) {
   var attackingOffsets = navigation.getMovableOffsets(locToAttack, navigation.getOffsetsInRange(SPECS.UNITS[unit].ATTACK_RADIUS[1]), map);
@@ -36,7 +37,8 @@ export function getAttackableRobots(state) {
   return attackableRobots;
 }
 
-export function prioritizeAttackableByUnit(attackableRobots) {
+export function getAttackablePrioritizedByUnit(state) {
+  var attackableRobots = getAttackableRobots(state);
   //sorts list of attackable units according to priority units (changes list)
   //TODO consider how to priortize attackable list
   var PRIORITY_LIST = [];
@@ -49,4 +51,5 @@ export function prioritizeAttackableByUnit(attackableRobots) {
   attackableRobots.sort(function(a, b) {
     return PRIORITY_LIST[a.unit] - PRIORITY_LIST[b.unit]
   });
+  return attackableRobots;
 }

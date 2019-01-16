@@ -163,3 +163,39 @@ console.log(JSON.stringify(getReversePathTo(tree, new Location(3, 1), new Locati
 
 //console.log(getOffsetsInRange(1));
 //console.log(getMovableOffsets(new Location(3, 1), getOffsetsInRange(1)))
+
+
+
+
+// var lookingForTarget = true;
+// while(lookingForTarget) {
+//   this.currentTargetIndex += 1;
+//   if(this.currentTargetIndex >= this.targetList.length) {
+//     // this.log("All locs from which to attack enemy castle were surrounded by friendlies; switching to patrol");
+//     this.mode = CONSTANTS.MODE.PATROL; //TODO: make switchToPatrol (and other modes) function, make patrol mode
+//     return null; //or break out of looking for target and do something else?
+//   }
+//   var potentialTargetLoc = this.targetList[this.currentTargetIndex];
+//   var idAtPotentialTarget = navigation.idAtOffset([potentialTargetLoc.y - this.myLoc.y, potentialTargetLoc.x - this.myLoc.x], this);
+//   //if potential target is visible and no robot there or invisible, go there.
+//   //if robot there and enemy, start heading there. //TODO consider staying out of its attack radius
+//   if( (idAtPotentialTarget <= 0) || (this.getRobot(idAtPotentialTarget).team != this.me.team)) {
+//     // this.log("Going to new target @ " + JSON.stringify(potentialTargetLoc));
+//
+//     return robotFunctions.setNewPath(this, potentialTargetLoc);
+//   }
+// }
+
+// /* Iterate through the target list until you find one that is either unoccupied,
+//  * invisible, or occupied by enemy and set a new path to there. If no targets
+//  * in list fit that description, go to patrol mode and do nothing.
+//  */
+// for(this.currentTargetIndex++; this.currentTargetIndex < this.targetList.length; this.currentTargetIndex++) {
+//   var potentialTargetLoc = this.targetList[this.currentTargetIndex];
+//   var idAtPotentialTarget = navigation.idAtOffset([potentialTargetLoc.y - this.myLoc.y, potentialTargetLoc.x - this.myLoc.x], this);
+//   if( (idAtPotentialTarget <= 0) || (this.getRobot(idAtPotentialTarget).team != this.me.team)) {
+//     return robotFunctions.setNewPath(this, potentialTargetLoc);
+//   }
+// }
+// this.mode = CONSTANTS.MODE.PATROL;
+// return null;
