@@ -53,3 +53,21 @@ export function castleInitialize(state) {
     }
   }
 }
+
+export function castleTurn(state) {
+  if(state.mode == CONSTANTS.MODE.SPAWN) {
+    for (var i = 0; i < state.spawn_list.length; i++) {
+      var offset = state.spawn_list[i];
+      if (navigation.idAtOffset(offset, state) == 0) {
+        //state.log("Building rush unit @ offset: " + JSON.stringify(offset));
+        return state.buildUnit(CONSTANTS.RUSH_BOT, offset[1], offset[0]);
+      }
+    }
+    //state.log("All offsets in spawn_list are occupied");
+    return null; //all adjacent occupied
+  }
+  if(state.mode == CONSTANTS.MODE.DO_NOTHING) {
+    //state.log("In do nothing mode, so doing nothing.");
+    return null;
+  }
+}

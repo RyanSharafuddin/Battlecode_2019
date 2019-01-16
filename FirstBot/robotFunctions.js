@@ -148,3 +148,75 @@ export function vanillaMove(state) {
   state.log("Making move: dx: " + moveToMake[1] + " dy: " + moveToMake[0]);
   return state.move(moveToMake[1], moveToMake[0]);
 }
+
+export function rusherInitialize(state) {
+  //calls rememberSpawnInfo and sets up stuff for the mode system
+  if(state.me.turn == 1) {
+    var costs = navigation.makeShortestPathTree(state.myLoc, SPECS.UNITS[state.me.unit].SPEED, state.map);
+    rememberSpawnInfo(state, {costs: costs});
+    if((!state.targetSquaresByCloseness) || (state.targetSquaresByCloseness[0][1] == Number.POSITIVE_INFINITY)) {
+      //cannot reach a position from which to attack enemy castle, or not spawned from a castle to begin with
+      state.mode = CONSTANTS.MODE.PATROL;
+    }
+    else {
+      //TODO mode switching function here
+      state.mode = CONSTANTS.MODE.GO_TO_TARGET;
+      state.currentTargetIndex = 0;
+      state.pathToTarget = navigation.getPathTo(costs, state.myLoc, state.targetList[state.currentTargetIndex], state);
+      state.numMoveToMake = 0;
+      if(state.pathToTarget == null) {
+        state.log("ERROR ERROR ERROR");
+      }
+    }
+  }
+}
+
+export function rusherTurn(state) {
+  //After turn 1 setup, before anything else (i.e. in all modes)
+  var attackable = attacker.getAttackablePrioritizedByUnit(state);
+  if(attackable.length > 0) {
+    return state.attack(attackable[0].x - state.me.x, attackable[0].y - state.me.y);
+  }
+  if(state.mode == CONSTANTS.MODE.PATROL) {
+    //TODO patrol code
+    state.log("Rusher @ " + JSON.stringify(state.myLoc) + " and is in patrol mode");
+    return null;
+  }
+  if(state.mode == CONSTANTS.MODE.WAIT) {
+    return null; //TODO: Implement
+  }
+  if(state.mode == CONSTANTS.MODE.GO_TO_TARGET) {
+    var moveToMake = state.pathToTarget[state.numMoveToMake]; //WARNING see robotFunctions
+    var idAtMove = navigation.idAtOffset(moveToMake, state);
+    var botAtMove;
+    if(idAtMove > 0) { //bot at place I want to move
+      botAtMove = state.getRobot(idAtMove);
+      var friendlyAtMove = (botAtMove.team === state.me.team);
+      if(friendlyAtMove) {
+        if(state.numMoveToMake == state.pathToTarget.length - 1) {
+          //were about to move to target and is blocked by friendly bot
+           var potentialTargetLoc = getNextOpenTarget(state, state.stats.SPEED);
+           if(potentialTargetLoc == null) {
+             state.mode = CONSTANTS.MODE.PATROL; //TODO consider waiting?
+             return null;
+           }
+           else {
+             return setNewPath(state, SPECS.UNITS[state.me.unit].SPEED, potentialTargetLoc);
+           }
+        }
+
+        else { //friendly bot where I want to move, but weren't about to move to target
+          return setNewPath(state, SPECS.UNITS[state.me.unit].SPEED, state.targetList[state.currentTargetIndex]);
+        }
+      }
+      else { //there's a bot where I want to move, but it's enemy bot
+        throw "WTH? Shouldn't I have attacked state? Enemy at place I want to move.";
+        return null;
+      }
+    }
+
+    else { //there is no bot where I want to move
+      return vanillaMove(state);
+    }
+  }
+}
