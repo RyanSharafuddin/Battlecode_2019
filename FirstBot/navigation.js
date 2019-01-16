@@ -42,31 +42,20 @@ export function getOffsetsInRange(movableRadius) {
     }
 
     export function getOccupiedMovableOffsets(state, maxSpeed, settings) { //settings is {enemy: true/false, friendly: true/false}
-    //TODO DEBUG
-      state.log("In function getOccupiedMovableOffsets");
-      state.log("maxSpeed is : " + maxSpeed);
       if( (settings === undefined) || (settings.friendly === undefined) || (settings.enemy === undefined)) {
         throw "Forgot arguments to getOccupiedMovableOffsets";
       }
       var results = [];
       var movableOffsets = getMovableOffsets(state.myLoc, getOffsetsInRange(maxSpeed), state.map);
-      // state.log("All movable (but potentially occupied) offsets are: ");
-      // state.log(JSON.stringify(movableOffsets));
       for(var i = 0; i < movableOffsets.length; i++) {
         var offset = movableOffsets[i];
-        // state.log("Considering offset: " + JSON.stringify(offset));
         var id = idAtOffset(offset, state);
         if(id <= 0) {
           continue;
         }
-        // state.log("In function getOccupiedMovableOffsets");
-        // state.log("occupier team is: " + state.getRobot(id).team)
-        // state.log("my team is: " + state.me.team)
         var occupierTeam = state.getRobot(id).team;
         var fulfillsFriendly = ((occupierTeam === state.me.team) && settings.friendly);
         var fulfillsEnemy = ((occupierTeam !== state.me.team) && settings.enemy);
-        // state.log("fulfillsEnemy: " + fulfillsEnemy);
-        // state.log("fulfillsFriendly: " + fulfillsFriendly);
         if(fulfillsEnemy || fulfillsFriendly) {
           results.push(offset);
         }
@@ -75,7 +64,6 @@ export function getOffsetsInRange(movableRadius) {
     }
 
     export function makeShortestPathTree(startLocation, movableRadius, map, extras) {
-        //TODO: perhaps optimize later to stop once found nearest karbonite/fuel
         var q = new Queue(4096);
         q.enqueue(startLocation);
         var costs = utilities.makeSquareGrid(map.length, null);
@@ -99,48 +87,32 @@ export function getOffsetsInRange(movableRadius) {
       }
 
   export function getPathTo(shortestPathTree, startLoc, endLoc, state) {
-    if(shortestPathTree === undefined) {
-      state.log("ERROR: shortestPathTree is undefined!")
-    }
-    // try {
-      //TODO: DEBUG case where endLoc not reachable from startLoc (done, I think)
-        var reversedDirectionList = []; //returns [dy, dx] offsets
-        var currentLoc = endLoc;
-        if(shortestPathTree[currentLoc.y] === undefined) {
-          state.log("ERROR: shortestPathTree is not made!")
-          state.log(utilities.pretty(shortestPathTree));
-        }
-        else {
-          state.log("shortestPathTree is made");
-        }
-        if(shortestPathTree[currentLoc.y][currentLoc.x] == null) {
-          return null; //there is no path because endLoc is unreachable
-        }
-        while(!currentLoc.equals(startLoc)) {
-          var offsetToGetHere = shortestPathTree[currentLoc.y][currentLoc.x][1];
-          reversedDirectionList.push(offsetToGetHere);
-          currentLoc = new Location(currentLoc.y - offsetToGetHere[0], currentLoc.x - offsetToGetHere[1]);
-        }
-        return reversedDirectionList.reverse();
-    // }
-    // catch (err) {
-    //   state.log(utilities.pretty(shortestPathTree));
-    //   state.log(utilities.pretty(startLoc));
-    //   state.log(utilities.pretty(endLoc));
-    // }
+      var reversedDirectionList = []; //returns [dy, dx] offsets
+      var currentLoc = endLoc;
+      if(shortestPathTree[currentLoc.y][currentLoc.x] == null) {
+        return null; //there is no path because endLoc is unreachable
+      }
+      while(!currentLoc.equals(startLoc)) {
+        var offsetToGetHere = shortestPathTree[currentLoc.y][currentLoc.x][1];
+        reversedDirectionList.push(offsetToGetHere);
+        currentLoc = new Location(currentLoc.y - offsetToGetHere[0], currentLoc.x - offsetToGetHere[1]);
+      }
+      return reversedDirectionList.reverse();
+  }
+
+  export function isReachable(shortestPathTree, endLoc) {
+    return(shortestPathTree[endLoc.y][endLoc.x] != null);
   }
 
   export function getLocsByCloseness(shortestPathTree, listOfLocs) {
     //relative to a starting location and a shortest path tree, returns a list
     //[[loc, cost], [loc, cost]] that is sorted by closeness
-    //TODO: DEBUG case where some Locs not reachable (done, I think)
     var newList = []
      for(var i = 0; i < listOfLocs.length; i++) {
        var loc = listOfLocs[i];
        (shortestPathTree[loc.y][loc.x] == null) ? newList.push([loc, Number.POSITIVE_INFINITY]) : newList.push([loc, shortestPathTree[loc.y][loc.x][0]]);
      }
      newList.sort(function(a, b) {
-       //DEBUG if both infinty, return 0
        if( a[1] == Number.POSITIVE_INFINITY && b[1] == Number.POSITIVE_INFINITY){
          return 0;
        }

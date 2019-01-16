@@ -43,6 +43,7 @@ export function allRobotRememberStuff(state) {
   if(state.me.turn == 1) {
     //TODO: optimize later to take advantage of map symmetry
     //TODO: perhaps sort state by nearest to furthest from bot?
+    state.stats = SPECS.UNITS[state.me.unit];
     state.symmetryType = navigation.getSymmetry([state.map, state.karbonite_map, state.fuel_map]);
     state.karbList = [];
     state.fuelList = []
@@ -120,23 +121,26 @@ export function setNewPath(state, maxSpeed, newLoc) {
   state.log("The new path to the target is: " + utilities.pretty(state.pathToTarget));
   // state.log("My new path to target: " + JSON.stringify(state.targetList[state.currentTargetIndex]) + "is: ");
   // state.log(JSON.stringify(state.pathToTarget));
-  if(state.pathToTarget == null) {;
-    state.mode = CONSTANTS.MODE.WAIT; //TODO: context switch here; remember old state, come back to once done waiting.
-    return null; //waiting??? Or switch to patrol? Or what?? TODO: something intelligent
-  }
+  if(state.pathToTarget == null) {
+    state.mode = CONSTANTS.MODE.WAIT; //TODO: Consider whether to wait for friendly bots to move
+    return null;                      // or see whether to head to next target in target list. Perhaps have a
+  }                                   //function that returns how long to wait based on how close the next target is
   state.numMoveToMake = 0;
   return vanillaMove(state);
 }
 
-export function getNextOpenTarget(state) {
+export function getNextOpenTarget(state, maxSpeed) {
   //return type: Location
   //return the next target in targetList that is either invisible, unoccupied, or occupied by enemy
   //or return null if there is none. WARNING: can return null
   //set state.currentTargetIndex correspondingly
+  var forbiddenLocs = navigation.getLocsFromOffsets(navigation.getOccupiedMovableOffsets(state, maxSpeed, {friendly: true, enemy: true}), state.myLoc);
+  var costs = navigation.makeShortestPathTree(state.myLoc, maxSpeed, state.map, {forbiddenLocs: forbiddenLocs});
   for(state.currentTargetIndex++; state.currentTargetIndex < state.targetList.length; state.currentTargetIndex++) {
     var potentialTargetLoc = state.targetList[state.currentTargetIndex];
     var idAtPotentialTarget = navigation.idAtOffset([potentialTargetLoc.y - state.myLoc.y, potentialTargetLoc.x - state.myLoc.x], state);
-    if( (idAtPotentialTarget <= 0) || (state.getRobot(idAtPotentialTarget).team != state.me.team)) {
+    var tiue = ( (idAtPotentialTarget <= 0) || (state.getRobot(idAtPotentialTarget).team != state.me.team)); //target invisible unoccupied or enemy
+    if(tiue && navigation.isReachable(costs, potentialTargetLoc)) {
       return potentialTargetLoc;
     }
   }
@@ -155,5 +159,5 @@ export function vanillaMove(state) {
     state.mode = CONSTANTS.MODE.PATROL; //NOTE: do not return here; still need to make state move
   }
   state.log("Making move: dx: " + moveToMake[1] + " dy: " + moveToMake[0]);
-  return state.move(moveToMake[1], moveToMake[0]); //WARNING moveToMake left behind in previous function
+  return state.move(moveToMake[1], moveToMake[0]); 
 }

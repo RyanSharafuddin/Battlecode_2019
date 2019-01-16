@@ -73,7 +73,7 @@ class MyRobot extends BCAbstractRobot {
         }
         if(this.mode == CONSTANTS.MODE.PATROL) {
           //TODO patrol code
-          this.log("Crusader @ " + JSON.stringify(this.myLoc) + " and is in patrol mode");
+          this.log("Rusher @ " + JSON.stringify(this.myLoc) + " and is in patrol mode");
           return null;
         }
         if(this.mode == CONSTANTS.MODE.WAIT) {
@@ -92,7 +92,7 @@ class MyRobot extends BCAbstractRobot {
                 //were about to move to target and is blocked by friendly bot
                 this.log("were about to move to target and is blocked by friendly bot");
                 this.log("target list is: " + utilities.pretty(this.targetList));
-                 var potentialTargetLoc = robotFunctions.getNextOpenTarget(this);
+                 var potentialTargetLoc = robotFunctions.getNextOpenTarget(this, this.stats.SPEED);
                  this.log("getting next open target. It is: " + utilities.pretty(potentialTargetLoc));
                  if(potentialTargetLoc == null) {
                    this.mode = CONSTANTS.MODE.PATROL;
