@@ -60,15 +60,11 @@ class MyRobot extends BCAbstractRobot {
 
 
       case SPECS.CRUSADER:
-        this.log("Crusader. Turn: " + this.me.turn);
-        this.log("Location: " + this.myLoc);
+        this.log("Crusader. Turn: " + this.me.turn + " Location: " + this.myLoc);
         crusader.crusaderInitialize(this);
         //After turn 1 setup, before anything else (i.e. in all modes)
         var attackable = attacker.getAttackablePrioritizedByUnit(this);
         if(attackable.length > 0) {
-          this.log("My Loc is: " + JSON.stringify(this.myLoc));
-          this.log("There are units I can attack. Prioritized by unit, they are: ");
-          this.log(utilities.pretty(attackable));
           return this.attack(attackable[0].x - this.me.x, attackable[0].y - this.me.y);
         }
         if(this.mode == CONSTANTS.MODE.PATROL) {
@@ -83,31 +79,23 @@ class MyRobot extends BCAbstractRobot {
           var moveToMake = this.pathToTarget[this.numMoveToMake]; //WARNING see robotFunctions
           var idAtMove = navigation.idAtOffset(moveToMake, this);
           var botAtMove;
-          if(idAtMove > 0) {
-            // this.log("There is a robot at the loc I wish to move to, which is: " + JSON.stringify(this.myLoc.addOffset(this.pathToTarget[this.numMoveToMake])));
+          if(idAtMove > 0) { //bot at place I want to move
             botAtMove = this.getRobot(idAtMove);
             var friendlyAtMove = (botAtMove.team === this.me.team);
             if(friendlyAtMove) {
               if(this.numMoveToMake == this.pathToTarget.length - 1) {
                 //were about to move to target and is blocked by friendly bot
-                this.log("were about to move to target and is blocked by friendly bot");
-                this.log("target list is: " + utilities.pretty(this.targetList));
                  var potentialTargetLoc = robotFunctions.getNextOpenTarget(this, this.stats.SPEED);
-                 this.log("getting next open target. It is: " + utilities.pretty(potentialTargetLoc));
                  if(potentialTargetLoc == null) {
-                   this.mode = CONSTANTS.MODE.PATROL;
+                   this.mode = CONSTANTS.MODE.PATROL; //TODO consider waiting?
                    return null;
                  }
                  else {
-                   this.log("setting new path to aforementioned open target. See setNewPath");
                    return robotFunctions.setNewPath(this, SPECS.UNITS[this.me.unit].SPEED, potentialTargetLoc);
                  }
               }
 
               else { //friendly bot where I want to move, but weren't about to move to target
-                this.log("There was a friendly bot where I wanted to move, a non target square");
-                this.log("Setting new path to original target; see setNewPath function");
-                this.log("Target is still: " + this.targetList[this.currentTargetIndex]);
                 return robotFunctions.setNewPath(this, SPECS.UNITS[this.me.unit].SPEED, this.targetList[this.currentTargetIndex]);
               }
             }

@@ -107,20 +107,12 @@ export function rememberSpawnInfo(state, extras) {
 }
 
 export function setNewPath(state, maxSpeed, newLoc) {
-  state.log("in function setNewPath");
-  state.log("maxSpeed is: " + maxSpeed);
   //NOTE: state only works for my very crude "pre mode" stuff. See the initialization of
-  //      the crusader for details. returns the value that the main
+  //      the rusher for details. returns the value that the main
   //      function should return to move, or null if no move (fix when make mode sytem)
-  state.log("Was at point: " +  state.numMoveToMake + " on path: " + utilities.pretty(state.pathToTarget));
   var forbiddenLocs = navigation.getLocsFromOffsets(navigation.getOccupiedMovableOffsets(state, maxSpeed, {friendly: true, enemy: true}), state.myLoc);
-  state.log("forbiddenLocs are: " + utilities.pretty(forbiddenLocs));
   var costs = navigation.makeShortestPathTree(state.myLoc, maxSpeed, state.map, {forbiddenLocs: forbiddenLocs});
-  //state.log("COSTS IN SETNEWPATH IS: " + utilities.pretty(costs));
   state.pathToTarget = navigation.getPathTo(costs, state.myLoc, newLoc, state);
-  state.log("The new path to the target is: " + utilities.pretty(state.pathToTarget));
-  // state.log("My new path to target: " + JSON.stringify(state.targetList[state.currentTargetIndex]) + "is: ");
-  // state.log(JSON.stringify(state.pathToTarget));
   if(state.pathToTarget == null) {
     state.mode = CONSTANTS.MODE.WAIT; //TODO: Consider whether to wait for friendly bots to move
     return null;                      // or see whether to head to next target in target list. Perhaps have a
@@ -148,16 +140,11 @@ export function getNextOpenTarget(state, maxSpeed) {
 }
 
 export function vanillaMove(state) {
-  //TODO: consider doing something else if can see enemy bot outside your
-  //      own attack radius and you are about to step into its attack radius
-  // state.log("There is no bot where I want to move.");
   var moveToMake = state.pathToTarget[state.numMoveToMake];
   state.numMoveToMake += 1;
-  // state.log("The next numMoveToMake is: " + state.numMoveToMake);
   if(state.numMoveToMake == state.pathToTarget.length) {
-    state.log("WILL HAVE REACHED target after making current move; switching to patrol mode"); //TODO: make switching to mode functions
     state.mode = CONSTANTS.MODE.PATROL; //NOTE: do not return here; still need to make state move
   }
   state.log("Making move: dx: " + moveToMake[1] + " dy: " + moveToMake[0]);
-  return state.move(moveToMake[1], moveToMake[0]); 
+  return state.move(moveToMake[1], moveToMake[0]);
 }
