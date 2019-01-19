@@ -9,7 +9,7 @@ export const MODE = {
 }
 
 export const PILGRIM_MOVE = SPECS.UNITS[SPECS.PILGRIM].SPEED;
-
+export const MAX_BOTS = SPECS.MAX_ID;
 export const NORTH = [-1, 0];
 export const NORTHEAST = [-1, 1];
 export const EAST = [0, 1];
