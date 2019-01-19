@@ -60,6 +60,8 @@ export function initializeAll(state) {
     }
   }
   //stuff to set every turn
+  state.signalsToSend = [];
+  state.castleTalksToSend = [];
   state.myLoc = new Location(state.me.y, state.me.x);
   state.visibleEnemies = [];
   state.visibleFriends = [];
@@ -197,6 +199,16 @@ export function nonBuildingInitialize(state) {
   }
 }
 
+//----------------------------CONVENIENCE FUNCTIONS------------------------------
+
+export function signalWrapper(state, value, radius) {
+  state.signalsToSend.push({value: value, radius: radius});
+}
+
+export function castleTalkWrapper(state, value) {
+  state.castleTalksToSend.push(value);
+}
+
 export function setNewPath(state, maxSpeed, newLoc) {
   //NOTE: state only works for my very crude "pre mode" stuff. See the initialization of
   //      the rusher for details. returns the value that the main
@@ -239,28 +251,6 @@ export function vanillaMove(state) {
   state.log("Making move: dx: " + moveToMake[1] + " dy: " + moveToMake[0]);
   return state.move(moveToMake[1], moveToMake[0]);
 }
-
-// export function rusherInitialize(state) {
-//   //calls rememberSpawnInfo and sets up stuff for the mode system
-//   if(state.me.turn == 1) {
-//     var costs = navigation.makeShortestPathTree(state.myLoc, SPECS.UNITS[state.me.unit].SPEED, state.map);
-//     rememberSpawnInfo(state, {costs: costs});
-//     if((!state.targetSquaresByCloseness) || (state.targetSquaresByCloseness[0][1] == Number.POSITIVE_INFINITY)) {
-//       //cannot reach a position from which to attack enemy castle, or not spawned from a castle to begin with
-//       state.mode = CONSTANTS.MODE.PATROL;
-//     }
-//     else {
-//       //TODO mode switching function here
-//       state.mode = CONSTANTS.MODE.GO_TO_TARGET;
-//       state.currentTargetIndex = 0;
-//       state.pathToTarget = navigation.getPathTo(costs, state.myLoc, state.targetList[state.currentTargetIndex], state);
-//       state.numMoveToMake = 0;
-//       if(state.pathToTarget == null) {
-//         state.log("ERROR ERROR ERROR");
-//       }
-//     }
-//   }
-// }
 
 export function rusherTurn(state) {
   //After turn 1 setup, before anything else (i.e. in all modes)

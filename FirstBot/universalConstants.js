@@ -1,11 +1,15 @@
 import {SPECS} from 'battlecode';
 export const MODE = {
-  SPAWN: 0,
+  SPAWN_PILGRIMS: 0,
   DO_NOTHING: 1,
   GO_TO_TARGET: 2,
   PATROL: 3,
   WAIT: 4 //currently this does nothing. TODO: implement state machine remembrance and switching and context
           //TODO consider moving around randomly a bit during waiting. Or maybe patrolling a bit.
+}
+
+export const REASON = {
+  NEARBY_MINES: 0
 }
 
 export const PILGRIM_MOVE = SPECS.UNITS[SPECS.PILGRIM].SPEED;

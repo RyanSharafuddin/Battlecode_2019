@@ -8,9 +8,40 @@ import * as attacker from './attacker.js'
 import * as CONSTANTS from './universalConstants.js'
 
 
-
+export function castleInitialize(state) {
+  if(state.me.turn == 1) {
+    var secondCC = (state.karbLocsTwo.length != 0);
+    var numMines = 0;
+    const tCost = 3; //highest tolerable cost at first.
+    for(; (state.karbLocsOne[numMines][1] <= tCost) || (secondCC && (state.karbLocsTwo[numMines][1] <= tCost)); numMines++) {
+    }
+    state.currentModeInfo = {reason: CONSTANTS.REASON.NEARBY_MINES, numPilgrims: numMines, nextMode: -1};
+    state.modesList = [state.currentModeInfo];
+    state.modeIndex = 0;
+    state.modeVal = CONSTANTS.MODE.SPAWN_PILGRIMS;
+    state.log("numMines is:" + numMines);
+    state.log("karbLocsOne is: " + utilities.pretty(state.karbLocsOne));
+  }
+}
 export function castleTurn(state) {
   learnLocs(state);
+  switch(state.modeVal) {
+    case CONSTANTS.MODE.SPAWN_PILGRIMS:
+      state.log("In spawn pilgrim mode");
+      return modePilgrimSpawn(state);
+    break;
+  }
+}
+
+function modePilgrimSpawn(state) {
+  if(state.unoccupiedBuildableOffsets.length > 0) {
+    if(state.currentModeInfo.numPilgrims <= 0) {
+      return;
+    }
+    state.currentModeInfo.numPilgrims--;
+    state.log("unoccupiedBuildableOffsets are: " + utilities.pretty(state.unoccupiedBuildableOffsets));
+    return(state.buildUnit(SPECS.PILGRIM, state.unoccupiedBuildableOffsets[0][1], state.unoccupiedBuildableOffsets[0][0]));
+  }
 }
 
 function learnLocs(state) {

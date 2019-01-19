@@ -8,7 +8,9 @@ import * as attacker from './attacker.js'
 import * as CONSTANTS from './universalConstants.js'
 
 export function pilgrimInitialize(state) {
-  var costs = navigation.makeShortestPathTree(state.myLoc, SPECS.UNITS[SPECS.PILGRIM].SPEED, state.map);
-  state.karbLocs = navigation.getLocsByCloseness(costs, state.karbLocs);
-  state.fuelLocs = navigation.getLocsByCloseness(costs, state.fuelLocs);
+  if(state.me.turn == 1) {
+    var costs = navigation.makeShortestPathTree(state.myLoc, SPECS.UNITS[SPECS.PILGRIM].SPEED, state.map);
+    state.karbLocs = navigation.getLocsByCloseness(costs, state.karbLocs);
+    state.fuelLocs = navigation.getLocsByCloseness(costs, state.fuelLocs);
+  }
 }
