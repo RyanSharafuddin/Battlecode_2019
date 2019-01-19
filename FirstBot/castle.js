@@ -10,6 +10,10 @@ import * as CONSTANTS from './universalConstants.js'
 
 
 export function castleTurn(state) {
+  learnLocs(state);
+}
+
+function learnLocs(state) {
   // state.log("castleTalkingRobots: " + utilities.pretty(state.castleTalkingRobots));
   if(state.me.turn == 1) {
     state.castleTalk(state.myLoc.y);
@@ -53,6 +57,12 @@ export function castleTurn(state) {
       // state.log("Am updating id: " + bot.id);
       // state.log("my castles: " + utilities.pretty(state.myCastles));
     }
-    state.log("I now know the locations of all my own castles. They are: " + utilities.pretty(state.myCastles));
+    if(state.symmetryType != navigation.SymmetryEnum.INDETERMINATE) {
+      for(var i = 1; i < state.myCastles.length; i++) {
+        state.enemyCastles.push(navigation.reflectLocation(state.myCastles[i], state.map.length, state.symmetryType));
+      }
+    }
+    // state.log("I now know the locations of all my own castles. They are: " + utilities.pretty(state.myCastles));
+    // state.log("Enemy castles: " + utilities.pretty(state.enemyCastles));
   }
 }
