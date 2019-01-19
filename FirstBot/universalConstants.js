@@ -8,6 +8,8 @@ export const MODE = {
           //TODO consider moving around randomly a bit during waiting. Or maybe patrolling a bit.
 }
 
+export const PILGRIM_MOVE = SPECS.UNITS[SPECS.PILGRIM].SPEED;
+
 export const NORTH = [-1, 0];
 export const NORTHEAST = [-1, 1];
 export const EAST = [0, 1];

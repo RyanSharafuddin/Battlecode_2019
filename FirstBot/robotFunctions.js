@@ -38,26 +38,46 @@ export function rememberStartingConnectedComponents(state, buildableOffsets) {
   state.startingConnectedComponents = [firstComp, secondComp];
 }
 
-export function allRobotRememberStuff(state) {
+export function initializeAll(state) {
   //remember symmetryType, karbList, fuelList
   if(state.me.turn == 1) {
-    //TODO: optimize later to take advantage of map symmetry
-    //TODO: perhaps sort state by nearest to furthest from bot?
+    var costs = navigation.makeShortestPathTree(new Location(state.me.y, state.me.x), universalConstants.PILGRIM_MOVE, state.map);
     state.stats = SPECS.UNITS[state.me.unit];
     state.symmetryType = navigation.getSymmetry([state.map, state.karbonite_map, state.fuel_map]);
     state.karbList = [];
     state.fuelList = []
     for(var y = 0; y < state.map.length; y++) {
       for (var x = 0; x < state.map.length; x++) {
-        if(state.karbonite_map[y][x]) {
+        if(state.karbonite_map[y][x] && navigation.isReachable(costs, new Location(y,x))) {
           state.karbList.push([y,x]);
         }
-        if(state.fuel_map[y][x]) {
+        if(state.fuel_map[y][x] && navigation.isReachable(costs, new Location(y,x))) {
           state.fuelList.push([y,x]);
         }
       }
     }
   }
+  //stuff to set every turn
+  state.myLoc = new Location(state.me.y, state.me.x);
+  state.visibleEnemies = [];
+  state.visibleFriends = [];
+  state.radioingRobots = [];
+  state.castleTalkingRobots = [];
+  state.attackableRobots = [];
+  var robos = state.getVisibleRobots();
+  for (var i = 0; i < robos.length; i++) {
+    var robo = robos[i];
+    if(state.isVisible(robo)) {
+      (robo.team == state.me.team) ? state.visibleFriends.push(robo) : state.visibleEnemies.push(robo);
+      if( (robo.team != state.me.team) && attacker.isOffsetInAttackingRange([robo.y - state.me.y, robo.x - state.me.x], state.me.unit)) {
+        state.attackableRobots.push(robo);
+      }
+    }
+    if(state.isRadioing(robo)) {
+        state.radioingRobots.push(robo);
+    }
+  }
+
 }
 
 export function rememberSpawnInfo(state, extras) {

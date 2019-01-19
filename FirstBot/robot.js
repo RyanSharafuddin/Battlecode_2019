@@ -18,8 +18,7 @@ class MyRobot extends BCAbstractRobot {
   }
 
   turn() {
-    robotFunctions.allRobotRememberStuff(this);
-    this.myLoc = new Location(this.me.y, this.me.x);
+    robotFunctions.initializeAll(this);
 
     switch (this.me.unit) {
 

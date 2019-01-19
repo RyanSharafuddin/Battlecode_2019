@@ -19,6 +19,9 @@ export function attackableFrom(locToAttack, unit, map) {
 }
 
 export function isOffsetInAttackingRange(offset, unit) {
+  if(SPECS.UNITS[unit].ATTACK_RADIUS == null) {
+    return false;
+  }
   return( (offset[0]**2 + offset[1]**2 <= SPECS.UNITS[unit].ATTACK_RADIUS[1]) &&
   (offset[0]**2 + offset[1]**2 >= SPECS.UNITS[unit].ATTACK_RADIUS[0]) );
 }
