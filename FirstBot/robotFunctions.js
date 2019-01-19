@@ -5,6 +5,7 @@ import * as utilities from './utilities.js'
 import * as navigation from './navigation.js'
 import * as CONSTANTS from './universalConstants.js'
 import * as attacker from './attacker.js'
+import {RobotCache} from './robotCache.js';
 
 export function rememberBuildableOffsets(state) {
   //causes state.buildableOffsets to be a list of offsets available for building
@@ -39,20 +40,21 @@ export function rememberStartingConnectedComponents(state, buildableOffsets) {
 }
 
 export function initializeAll(state) {
-  //remember symmetryType, karbList, fuelList
+  //remember symmetryType, karbLocs, fuelLocs
   if(state.me.turn == 1) {
+    state.robotCache = new RobotCache();
     var costs = navigation.makeShortestPathTree(new Location(state.me.y, state.me.x), universalConstants.PILGRIM_MOVE, state.map);
     state.stats = SPECS.UNITS[state.me.unit];
     state.symmetryType = navigation.getSymmetry([state.map, state.karbonite_map, state.fuel_map]);
-    state.karbList = [];
-    state.fuelList = []
+    state.karbLocs = [];
+    state.fuelLocs = []
     for(var y = 0; y < state.map.length; y++) {
       for (var x = 0; x < state.map.length; x++) {
         if(state.karbonite_map[y][x] && navigation.isReachable(costs, new Location(y,x))) {
-          state.karbList.push([y,x]);
+          state.karbLocs.push(new Location(y, x));
         }
         if(state.fuel_map[y][x] && navigation.isReachable(costs, new Location(y,x))) {
-          state.fuelList.push([y,x]);
+          state.fuelLocs.push(new Location(y, x));
         }
       }
     }
@@ -62,12 +64,12 @@ export function initializeAll(state) {
   state.visibleEnemies = [];
   state.visibleFriends = [];
   state.radioingRobots = [];
-  state.castleTalkingRobots = [];
   state.attackableRobots = [];
   var robos = state.getVisibleRobots();
   for (var i = 0; i < robos.length; i++) {
     var robo = robos[i];
     if(state.isVisible(robo)) {
+      state.robotCache.add({id: robo.id, unit: robo.unit, team: robo.team});
       (robo.team == state.me.team) ? state.visibleFriends.push(robo) : state.visibleEnemies.push(robo);
       if( (robo.team != state.me.team) && attacker.isOffsetInAttackingRange([robo.y - state.me.y, robo.x - state.me.x], state.me.unit)) {
         state.attackableRobots.push(robo);
@@ -77,7 +79,81 @@ export function initializeAll(state) {
         state.radioingRobots.push(robo);
     }
   }
+}
 
+  function setSpawnList(state) {
+    var firstCCcloseness = navigation.numMovesTo(state.firstCCshortestPathTree, state.enemyCastles[0]);
+    var secondCCcloseness = (state.startingConnectedComponents[1].length !== 0) ? navigation.numMovesTo(state.secondCCshortestPathTree, state.enemyCastles[0]) : Number.POSITIVE_INFINITY;
+    if(firstCCcloseness === Number.POSITIVE_INFINITY && secondCCcloseness === Number.POSITIVE_INFINITY) {
+      state.spawn_list = null;
+      state.log("The corresponding enemy castle of this castle is unreachable by move radius 4.");
+    }
+    else if(firstCCcloseness !== Number.POSITIVE_INFINITY) {
+      state.spawn_list = state.startingConnectedComponents[0];
+    }
+    else { //second one is only usable one
+      state.spawn_list = state.startingConnectedComponents[1];
+    }
+}
+
+export function buildingInitialize(state) {
+  if(state.me.turn == 1) {
+    //both turn 1
+    rememberBuildableOffsets(state);
+    rememberStartingConnectedComponents(state, state.buildableOffsets);
+
+    var offsetToUse = [state.startingConnectedComponents[0][0][0], state.startingConnectedComponents[0][0][1]];
+    var beginLoc = state.myLoc.addOffset(offsetToUse);
+    state.firstCCshortestPathTree = navigation.makeShortestPathTree(beginLoc, universalConstants.PILGRIM_MOVE, state.map, {state: state});
+
+    if(state.startingConnectedComponents[1].length !== 0) {
+      var offsetToUse = [state.startingConnectedComponents[1][0][0], state.startingConnectedComponents[1][0][1]];
+      var beginLoc = state.myLoc.addOffset(offsetToUse);
+      state.secondCCshortestPathTree = navigation.makeShortestPathTree(beginLoc, universalConstants.PILGRIM_MOVE, state.map);
+    }
+
+    state.karbLocsOne = navigation.getLocsByCloseness(firstCCshortestPathTree, state.karbLocs);
+    state.karbLocsTwo = (state.startingConnectedComponents[1].length !== 0) ? navigation.getLocsByCloseness(secondCCshortestPathTree, state.karbLocs) : [];
+
+    state.fuelLocsOne = navigation.getLocsByCloseness(firstCCshortestPathTree, state.fuelLocs);
+    state.fuelLocsTwo = (state.startingConnectedComponents[1].length !== 0) ? navigation.getLocsByCloseness(secondCCshortestPathTree, state.fuelLocs) : [];
+    state.myCastles = [];
+    state.enemyCastles = [];
+    if(state.me.unit == SPECS.CASTLE) {
+      //castle turn 1
+      state.myCastles.push(state.myLoc);
+      if(state.symmetryType != navigation.SymmetryEnum.INDETERMINATE) {
+        state.enemyCastles.push(navigation.reflectLocation(state.myLoc, state.map.length, state.symmetryType));
+        setSpawnList(state);
+      }
+    }
+    else { //church turn 1
+
+    }
+  }
+  //both every turn
+  state.unoccupiedBuildableOffsets = [];
+  for(var i = 0; i < state.buildableOffsets.length; i++) {
+    var offset = state.buildableOffsets[i];
+    if(navigation.isOffsetUnoccupied(offset, state)) {
+      state.unoccupiedBuildableOffsets.push(offset);
+    }
+  }
+  if(state.me.unit == SPECS.CASTLE) {
+    //castle every turn
+    state.castleTalkingRobots = [];
+    var visBots = state.getVisibleRobots();
+    for(var i = 0; i < visBots.length; i++) {
+      var bot = visBots[i];
+      if(bot.castle_talk > 0) {
+        state.castleTalkingRobots.push(bot);
+      }
+    }
+
+  }
+  else { //church every turn
+
+  }
 }
 
 export function rememberSpawnInfo(state, extras) {

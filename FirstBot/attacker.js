@@ -26,19 +26,19 @@ export function isOffsetInAttackingRange(offset, unit) {
   (offset[0]**2 + offset[1]**2 >= SPECS.UNITS[unit].ATTACK_RADIUS[0]) );
 }
 
-export function getAttackableRobots(state) {
-  //TODO: debug this and below function
-  var attackableRobots = [];
-  var accessibleRobots = state.getVisibleRobots();
-  for(var i = 0; i < accessibleRobots.length; i++) {
-    var accessibleRobot = accessibleRobots[i];
-    if(state.isVisible(accessibleRobot) && (accessibleRobot.team != state.me.team) &&
-        isOffsetInAttackingRange([accessibleRobot.y - state.me.y, accessibleRobot.x - state.me.x], state.me.unit)) {
-        attackableRobots.push(accessibleRobot);
-    }
-  }
-  return attackableRobots;
-}
+// export function getAttackableRobots(state) {
+//   //TODO: debug this and below function
+//   var attackableRobots = [];
+//   var accessibleRobots = state.getVisibleRobots();
+//   for(var i = 0; i < accessibleRobots.length; i++) {
+//     var accessibleRobot = accessibleRobots[i];
+//     if(state.isVisible(accessibleRobot) && (accessibleRobot.team != state.me.team) &&
+//         isOffsetInAttackingRange([accessibleRobot.y - state.me.y, accessibleRobot.x - state.me.x], state.me.unit)) {
+//         attackableRobots.push(accessibleRobot);
+//     }
+//   }
+//   return attackableRobots;
+// }
 
 export function getAttackablePrioritizedByUnit(state) {
   var attackableRobots = getAttackableRobots(state);

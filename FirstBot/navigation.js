@@ -104,6 +104,13 @@ export function getOffsetsInRange(movableRadius) {
     return(shortestPathTree[endLoc.y][endLoc.x] != null);
   }
 
+  export function numMovesTo(shortestPathTree, endLoc) {
+    if(shortestPathTree[endLoc.y][endLoc.x] == null) {
+      return Number.POSITIVE_INFINITY;
+    }
+    return(shortestPathTree[endLoc.y][endLoc.x][0]);
+  }
+
   export function getLocsByCloseness(shortestPathTree, listOfLocs) {
     //relative to a starting location and a shortest path tree, returns a list
     //[[loc, cost], [loc, cost]] that is sorted by closeness

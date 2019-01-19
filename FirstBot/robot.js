@@ -24,16 +24,13 @@ class MyRobot extends BCAbstractRobot {
 
       case SPECS.CASTLE:
         this.log("Castle. Turn: " + this.me.turn);
-        castle.castleInitialize(this);
-        return castle.castleTurn(this);
+        robotFunctions.buildingInitialize(this);
+        //return castle.castleTurn(this);
         break;
 
       case SPECS.CHURCH:
         this.log("Church. Turn: " + this.me.turn);
-        if(this.me.turn == 1) {
-          robotFunctions.rememberBuildableOffsets(this);
-          robotFunctions.rememberStartingConnectedComponents(this, this.buildableOffsets); //TODO remove if buggy
-        }
+        robotFunctions.buildingInitialize(this);
         break;
 
 
@@ -44,20 +41,20 @@ class MyRobot extends BCAbstractRobot {
 
       case SPECS.CRUSADER:
         this.log("Crusader. Turn: " + this.me.turn + " Location: " + this.myLoc);
-        crusader.crusaderInitialize(this);
-        return robotFunctions.rusherTurn(this);
+        // crusader.crusaderInitialize(this);
+        // return robotFunctions.rusherTurn(this);
         break;
 
       case SPECS.PROPHET:
         this.log("Prophet. Turn: " + this.me.turn);
-        robotFunctions.rusherInitialize(this);
-        return robotFunctions.rusherTurn(this);
+        // robotFunctions.rusherInitialize(this);
+        // return robotFunctions.rusherTurn(this);
         break;
 
       case SPECS.PREACHER:
         this.log("Preacher. Turn: " + this.me.turn);
-        robotFunctions.rusherInitialize(this);
-        return robotFunctions.rusherTurn(this);
+        // robotFunctions.rusherInitialize(this);
+        // return robotFunctions.rusherTurn(this);
         break;
       default:
     }
