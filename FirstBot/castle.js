@@ -10,19 +10,43 @@ import * as CONSTANTS from './universalConstants.js'
 
 
 export function castleTurn(state) {
-  if(state.mode == CONSTANTS.MODE.SPAWN) {
-    for (var i = 0; i < state.spawn_list.length; i++) {
-      var offset = state.spawn_list[i];
-      if (navigation.idAtOffset(offset, state) == 0) {
-        //state.log("Building rush unit @ offset: " + JSON.stringify(offset));
-        return state.buildUnit(CONSTANTS.RUSH_BOT, offset[1], offset[0]);
+  if(state.me.turn == 1) {
+    state.castleTalk(state.myLoc.y);
+    if(state.castleTalkingRobots.length == 0) {
+      state.log("I am the first castle");
+    }
+    for(var i = 0; i < state.castleTalkingRobots.length; i++) {
+      var bot = state.castleTalkingRobots[i];
+      state.myCastles.push(new Location(bot.castle_talk, -1));
+      state.robotCache.add({id: bot.id, unit: SPECS.CASTLE, team: state.me.team, castleIndex: state.myCastles.length -1});
+    }
+  }
+
+  if(state.me.turn == 2) {
+    state.castleTalk(state.myLoc.x);
+    if(state.castleTalkingRobots.length == 0) {
+      state.log("I am the only castle");
+    }
+    for(var i = 0; i < state.castleTalkingRobots.length; i++) {
+      var bot = state.castleTalkingRobots[i];
+      if(state.myCastles.length == 0) {
+        state.log("I am the first castle");
+      }
+      if(state.robotCache.contains(bot.id)) { //seen this before, add its x coord
+        var idx = state.robotCache.get(bot.id).castleIndex;
+        state.myCastles[castleIndex].x = bot.castle_talk;
+      }
+      else {
+        state.myCastles.push(new Location(bot.castle_talk, -1));
+        state.robotCache.add({id: bot.id, unit: SPECS.CASTLE, team: state.me.team, castleIndex: state.myCastles.length -1});
       }
     }
-    //state.log("All offsets in spawn_list are occupied");
-    return null; //all adjacent occupied
   }
-  if(state.mode == CONSTANTS.MODE.DO_NOTHING) {
-    //state.log("In do nothing mode, so doing nothing.");
-    return null;
+  if(state.me.turn == 3) {
+    for(var i = 0; i < state.castleTalkingRobots.length; i++) {
+      var bot = state.castleTalkingRobots[i];
+      state.myCastles[state.robotCache.get(bot.id).castleIndex].x = bot.castle_talk;
+    }
+    state.log("I now know the locations of all my own castles. They are: " + utilities.pretty(state.myCastles));
   }
 }
