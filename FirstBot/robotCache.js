@@ -12,6 +12,6 @@ export class RobotCache {
     return this.robots[id];
   }
   contains(id) {
-    return(this.robots[id] === null);
+    return(this.robots[id] !== null);
   }
 }

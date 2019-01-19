@@ -70,12 +70,12 @@ export function initializeAll(state) {
     var robo = robos[i];
     if(state.isVisible(robo)) {
       state.robotCache.add({id: robo.id, unit: robo.unit, team: robo.team});
-      (robo.team == state.me.team) ? state.visibleFriends.push(robo) : state.visibleEnemies.push(robo);
+      ( (robo.team == state.me.team) && (robo.id != state.me.id)) ? state.visibleFriends.push(robo) : state.visibleEnemies.push(robo);
       if( (robo.team != state.me.team) && attacker.isOffsetInAttackingRange([robo.y - state.me.y, robo.x - state.me.x], state.me.unit)) {
         state.attackableRobots.push(robo);
       }
     }
-    if(state.isRadioing(robo)) {
+    if(state.isRadioing(robo) && (state.me.id != robo.id)) {
         state.radioingRobots.push(robo);
     }
   }
@@ -112,11 +112,11 @@ export function buildingInitialize(state) {
       state.secondCCshortestPathTree = navigation.makeShortestPathTree(beginLoc, CONSTANTS.PILGRIM_MOVE, state.map);
     }
 
-    state.karbLocsOne = navigation.getLocsByCloseness(firstCCshortestPathTree, state.karbLocs);
-    state.karbLocsTwo = (state.startingConnectedComponents[1].length !== 0) ? navigation.getLocsByCloseness(secondCCshortestPathTree, state.karbLocs) : [];
+    state.karbLocsOne = navigation.getLocsByCloseness(state.firstCCshortestPathTree, state.karbLocs);
+    state.karbLocsTwo = (state.startingConnectedComponents[1].length !== 0) ? navigation.getLocsByCloseness(state.secondCCshortestPathTree, state.karbLocs) : [];
 
-    state.fuelLocsOne = navigation.getLocsByCloseness(firstCCshortestPathTree, state.fuelLocs);
-    state.fuelLocsTwo = (state.startingConnectedComponents[1].length !== 0) ? navigation.getLocsByCloseness(secondCCshortestPathTree, state.fuelLocs) : [];
+    state.fuelLocsOne = navigation.getLocsByCloseness(state.firstCCshortestPathTree, state.fuelLocs);
+    state.fuelLocsTwo = (state.startingConnectedComponents[1].length !== 0) ? navigation.getLocsByCloseness(state.secondCCshortestPathTree, state.fuelLocs) : [];
     state.myCastles = [];
     state.enemyCastles = [];
     if(state.me.unit == SPECS.CASTLE) {
@@ -145,7 +145,7 @@ export function buildingInitialize(state) {
     var visBots = state.getVisibleRobots();
     for(var i = 0; i < visBots.length; i++) {
       var bot = visBots[i];
-      if(bot.castle_talk > 0) {
+      if( (bot.castle_talk > 0) && (bot.id != state.me.id)) {
         state.castleTalkingRobots.push(bot);
       }
     }

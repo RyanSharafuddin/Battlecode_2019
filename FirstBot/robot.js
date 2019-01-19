@@ -25,6 +25,7 @@ class MyRobot extends BCAbstractRobot {
 
       case SPECS.CASTLE:
         this.log("Castle. Turn: " + this.me.turn);
+        this.log("myLoc: " + this.myLoc);
         robotFunctions.buildingInitialize(this);
         return castle.castleTurn(this);
         break;
