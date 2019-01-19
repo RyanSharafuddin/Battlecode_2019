@@ -43,7 +43,7 @@ export function initializeAll(state) {
   //remember symmetryType, karbLocs, fuelLocs
   if(state.me.turn == 1) {
     state.robotCache = new RobotCache();
-    var costs = navigation.makeShortestPathTree(new Location(state.me.y, state.me.x), universalConstants.PILGRIM_MOVE, state.map);
+    var costs = navigation.makeShortestPathTree(new Location(state.me.y, state.me.x), CONSTANTS.PILGRIM_MOVE, state.map);
     state.stats = SPECS.UNITS[state.me.unit];
     state.symmetryType = navigation.getSymmetry([state.map, state.karbonite_map, state.fuel_map]);
     state.karbLocs = [];
@@ -104,12 +104,12 @@ export function buildingInitialize(state) {
 
     var offsetToUse = [state.startingConnectedComponents[0][0][0], state.startingConnectedComponents[0][0][1]];
     var beginLoc = state.myLoc.addOffset(offsetToUse);
-    state.firstCCshortestPathTree = navigation.makeShortestPathTree(beginLoc, universalConstants.PILGRIM_MOVE, state.map, {state: state});
+    state.firstCCshortestPathTree = navigation.makeShortestPathTree(beginLoc, CONSTANTS.PILGRIM_MOVE, state.map, {state: state});
 
     if(state.startingConnectedComponents[1].length !== 0) {
       var offsetToUse = [state.startingConnectedComponents[1][0][0], state.startingConnectedComponents[1][0][1]];
       var beginLoc = state.myLoc.addOffset(offsetToUse);
-      state.secondCCshortestPathTree = navigation.makeShortestPathTree(beginLoc, universalConstants.PILGRIM_MOVE, state.map);
+      state.secondCCshortestPathTree = navigation.makeShortestPathTree(beginLoc, CONSTANTS.PILGRIM_MOVE, state.map);
     }
 
     state.karbLocsOne = navigation.getLocsByCloseness(firstCCshortestPathTree, state.karbLocs);
@@ -156,19 +156,18 @@ export function buildingInitialize(state) {
   }
 }
 
-export function rememberSpawnInfo(state, extras) {
-  //NOTE: need extras{costs: the shortestPathTree rooted at starting location}
+export function nonBuildingInitialize(state) {
   /*  Sets:
-   *  Location state.spawnLoc
-   *  boolean state.spawnLocIsCastle
-   *  Location state.targetCastleLoc                   //can be null
-   *  Location list: state.targetCastleAttackableFrom //can be null if pilgrim or no target castle
-   *  [[loc, cost], [loc, cost]] state.targetSquaresByCloseness //the above list sorted by closeness
-   *  Location list: state.targetList simply state.targetCastleAttackableFrom sorted by cost, without costs in list
+   *  Location state.spawnedLoc
+   *  boolean state.spawnedLocIsCastle
+   *  Location[] state.myCastles            //can be empty, if spawned at church
+   *  Location[]  state.enemyCastles        //can be empty, if spawned at church
    */
   if(state.me.turn != 1) {
     return;
   }
+  state.myCastles = [];
+  state.enemyCastles = [];
   var castleLoc = null
   var churchLoc = null;
   for(var i = 0; i < CONSTANTS.ADJACENT.length; i++) {
@@ -187,18 +186,14 @@ export function rememberSpawnInfo(state, extras) {
   if(castleLoc) {
     state.spawnedLoc = castleLoc;
     state.spawnedLocIsCastle = true;
-    state.targetCastleLoc = navigation.reflectLocation(state.spawnedLoc, state.map.length, state.symmetryType);
-    state.targetCastleAttackableFrom = (state.me.unit != SPECS.PILGRIM) ? attacker.attackableFrom(state.targetCastleLoc, state.me.unit, state.map) : null; //locs list
-    if(state.targetCastleAttackableFrom && (state.targetCastleAttackableFrom.length > 0)) {
-      state.targetSquaresByCloseness = navigation.getLocsByCloseness(extras.costs, state.targetCastleAttackableFrom);
-      state.targetList = utilities.flattenFirst(state.targetSquaresByCloseness); //targetList is now [loc, loc] in order of closeness
+    state.myCastles.push(castleLoc);
+    if(state.symmetryType != navigation.SymmetryEnum.INDETERMINATE) {
+      state.enemyCastles.push(navigation.reflectLocation(castleLoc, state.map.length, state.symmetryType));
     }
   }
   else if(churchLoc) {
     state.spawnedLoc = churchLoc;
     state.spawnedLocIsCastle = false;
-    state.targetCastleLoc = null;
-    state.targetCastleAttackableFrom = null;
   }
 }
 
@@ -245,27 +240,27 @@ export function vanillaMove(state) {
   return state.move(moveToMake[1], moveToMake[0]);
 }
 
-export function rusherInitialize(state) {
-  //calls rememberSpawnInfo and sets up stuff for the mode system
-  if(state.me.turn == 1) {
-    var costs = navigation.makeShortestPathTree(state.myLoc, SPECS.UNITS[state.me.unit].SPEED, state.map);
-    rememberSpawnInfo(state, {costs: costs});
-    if((!state.targetSquaresByCloseness) || (state.targetSquaresByCloseness[0][1] == Number.POSITIVE_INFINITY)) {
-      //cannot reach a position from which to attack enemy castle, or not spawned from a castle to begin with
-      state.mode = CONSTANTS.MODE.PATROL;
-    }
-    else {
-      //TODO mode switching function here
-      state.mode = CONSTANTS.MODE.GO_TO_TARGET;
-      state.currentTargetIndex = 0;
-      state.pathToTarget = navigation.getPathTo(costs, state.myLoc, state.targetList[state.currentTargetIndex], state);
-      state.numMoveToMake = 0;
-      if(state.pathToTarget == null) {
-        state.log("ERROR ERROR ERROR");
-      }
-    }
-  }
-}
+// export function rusherInitialize(state) {
+//   //calls rememberSpawnInfo and sets up stuff for the mode system
+//   if(state.me.turn == 1) {
+//     var costs = navigation.makeShortestPathTree(state.myLoc, SPECS.UNITS[state.me.unit].SPEED, state.map);
+//     rememberSpawnInfo(state, {costs: costs});
+//     if((!state.targetSquaresByCloseness) || (state.targetSquaresByCloseness[0][1] == Number.POSITIVE_INFINITY)) {
+//       //cannot reach a position from which to attack enemy castle, or not spawned from a castle to begin with
+//       state.mode = CONSTANTS.MODE.PATROL;
+//     }
+//     else {
+//       //TODO mode switching function here
+//       state.mode = CONSTANTS.MODE.GO_TO_TARGET;
+//       state.currentTargetIndex = 0;
+//       state.pathToTarget = navigation.getPathTo(costs, state.myLoc, state.targetList[state.currentTargetIndex], state);
+//       state.numMoveToMake = 0;
+//       if(state.pathToTarget == null) {
+//         state.log("ERROR ERROR ERROR");
+//       }
+//     }
+//   }
+// }
 
 export function rusherTurn(state) {
   //After turn 1 setup, before anything else (i.e. in all modes)

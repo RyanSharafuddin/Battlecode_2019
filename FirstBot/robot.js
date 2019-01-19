@@ -8,6 +8,7 @@ import * as attacker from './attacker.js'
 import * as castle from './castle.js'
 import * as CONSTANTS from './universalConstants.js'
 import * as crusader from './crusader.js'
+import * as pilgrim from './pilgrim.js'
 
 
 class MyRobot extends BCAbstractRobot {
@@ -25,7 +26,7 @@ class MyRobot extends BCAbstractRobot {
       case SPECS.CASTLE:
         this.log("Castle. Turn: " + this.me.turn);
         robotFunctions.buildingInitialize(this);
-        //return castle.castleTurn(this);
+        return castle.castleTurn(this);
         break;
 
       case SPECS.CHURCH:
@@ -36,23 +37,28 @@ class MyRobot extends BCAbstractRobot {
 
       case SPECS.PILGRIM:
         this.log("Pilgrim. Turn: " + this.me.turn);
+        robotFunctions.nonBuildingInitialize(this);
+        pilgrim.pilgrimInitialize(this);
         break;
 
 
       case SPECS.CRUSADER:
         this.log("Crusader. Turn: " + this.me.turn + " Location: " + this.myLoc);
+        robotFunctions.nonBuildingInitialize(this);
         // crusader.crusaderInitialize(this);
         // return robotFunctions.rusherTurn(this);
         break;
 
       case SPECS.PROPHET:
         this.log("Prophet. Turn: " + this.me.turn);
+        robotFunctions.nonBuildingInitialize(this);
         // robotFunctions.rusherInitialize(this);
         // return robotFunctions.rusherTurn(this);
         break;
 
       case SPECS.PREACHER:
         this.log("Preacher. Turn: " + this.me.turn);
+        robotFunctions.nonBuildingInitialize(this);
         // robotFunctions.rusherInitialize(this);
         // return robotFunctions.rusherTurn(this);
         break;
