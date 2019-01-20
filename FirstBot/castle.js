@@ -33,10 +33,6 @@ export function castleInitialize(state) {
     state.modesList = [state.currentModeInfo];
     state.modeIndex = 0;
     state.modeVal = CONSTANTS.MODE.SPAWN_PILGRIMS;
-    // state.log("Castle has been initialized. State is: " + utilities.pretty(state));
-    // state.log("Castle has been initialized. ModeInfo is: " + utilities.pretty(state.currentModeInfo));
-    // state.log("numMines is:" + numMines);
-    // state.log("karbLocsOne is: " + utilities.pretty(state.karbLocsOne));
   }
 }
 export function castleTurn(state) {
@@ -51,26 +47,31 @@ export function castleTurn(state) {
 
 function modePilgrimSpawn(state) {
   if(state.unoccupiedBuildableOffsets.length > 0) {
+
     if(state.currentModeInfo.numPilgrims <= 0) {
       return;
     }
-    var karbListToUse = (state.currentModeInfo.whichCC[state.currentModeInfo.mineNum] == 0) ? state.karbLocsOne : state.karbLocsTwo;
-    var fuelListToUse = (state.currentModeInfo.whichCC[state.currentModeInfo.mineNum] == 0) ? state.fuelLocsOne : state.fuelLocsTwo;
-    var mineLoc = (state.currentModeInfo.mineType == "karbonite") ? karbListToUse[state.currentModeInfo.mineNum][0] : fuelListToUse[state.currentModeInfo.mineNum][0];
+    switch (state.currentModeInfo.reason) {
+      case CONSTANTS.REASON.NEARBY_MINES:
+        var karbListToUse = (state.currentModeInfo.whichCC[state.currentModeInfo.mineNum] == 0) ? state.karbLocsOne : state.karbLocsTwo;
+        var fuelListToUse = (state.currentModeInfo.whichCC[state.currentModeInfo.mineNum] == 0) ? state.fuelLocsOne : state.fuelLocsTwo;
+        var mineLoc = (state.currentModeInfo.mineType == "karbonite") ? karbListToUse[state.currentModeInfo.mineNum][0] : fuelListToUse[state.currentModeInfo.mineNum][0];
 
-    var offsetListToUse = state.startingConnectedComponents[state.currentModeInfo.whichCC[state.currentModeInfo.mineNum]];
-    state.currentModeInfo.mineNum++;
-    state.currentModeInfo.numPilgrims--;
-    // state.log("startingConnectedComponents: " + utilities.pretty(state.startingConnectedComponents));
-    // state.log("currentModeInfo: " + utilities.pretty(state.currentModeInfo));
-    // state.log("In pilgrim spawn. State is: " + utilities.pretty(state));
-    // state.log("offsetListToUse: " + utilities.pretty(offsetListToUse));
-    for (var i = 0; i < offsetListToUse.length; i++) {
-      if(navigation.isOffsetUnoccupied(offsetListToUse[i], state)) {
-        state.signal((mineLoc.y << 6 | mineLoc.x) , 2);
-        return(state.buildUnit(SPECS.PILGRIM, offsetListToUse[i][1], offsetListToUse[i][0]));
-      }
+        var offsetListToUse = state.startingConnectedComponents[state.currentModeInfo.whichCC[state.currentModeInfo.mineNum]];
+        state.currentModeInfo.mineNum++;
+        state.currentModeInfo.numPilgrims--;
+        for (var i = 0; i < offsetListToUse.length; i++) {
+          if(navigation.isOffsetUnoccupied(offsetListToUse[i], state)) {
+            state.signal((mineLoc.y << 6 | mineLoc.x) , 2);
+            return(state.buildUnit(SPECS.PILGRIM, offsetListToUse[i][1], offsetListToUse[i][0]));
+          }
+        }
+        break;
+
+      default:
+        return(state.buildUnit(SPECS.PILGRIM, state.unoccupiedBuildableOffsets[0][1], state.unoccupiedBuildableOffsets[0][0]));
     }
+
   }
   state.log("In mode: SPAWN_PILGRIMS, but all adjacent squares are occupied");
 }

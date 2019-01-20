@@ -6,7 +6,7 @@ export const MODE = {
   PATROL: 3,
   WAIT: 4, //currently this does nothing. TODO: implement state machine remembrance and switching and context
           //TODO consider moving around randomly a bit during waiting. Or maybe patrolling a bit.
-  MINE_KARB: 5
+  MINE: 5
 }
 
 export const REASON = {

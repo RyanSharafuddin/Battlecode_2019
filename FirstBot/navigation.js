@@ -233,6 +233,10 @@ export function getOffsetsInRange(movableRadius) {
     return offsetLst;
   }
 
+  export function radiusBetween(locA, locB) {
+    return( (locA.x - locB.x)**2 + (locA.y - locB.y)**2);
+  }
+
   export var SymmetryEnum = {
     HORIZONTAL: 0,
     VERTICAL: 1,
