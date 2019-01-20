@@ -41,6 +41,7 @@ class MyRobot extends BCAbstractRobot {
         this.log("Pilgrim. Turn: " + this.me.turn);
         robotFunctions.nonBuildingInitialize(this);
         pilgrim.pilgrimInitialize(this);
+        return pilgrim.pilgrimTurn(this);
         break;
 
 

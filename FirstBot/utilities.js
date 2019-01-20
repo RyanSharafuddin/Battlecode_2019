@@ -43,9 +43,18 @@ const OWN_TOSTRING_TABLE = [
    "Location",
 ];
 
+function arrayString(arr) {
+  var result = "[ ";
+  for(var i = 0; i < arr.length; i++) {
+    result += ((arr[i] instanceof Array) ? arrayString(arr[i]) : ((typeof arr[i] =='object') ? prettyHelper(arr[i]) : arr[i])) + ", ";
+  }
+  result += "]"
+  return result;
+}
+
 function prettyHelper(obj, indent) {
   // https://stackoverflow.com/questions/130404/javascript-data-formatting-pretty-printer
-  if(OWN_TOSTRING_TABLE.includes(obj.constructor.name)) {
+  if((value != null) && OWN_TOSTRING_TABLE.includes(obj.constructor.name)) {
     return obj.toString();
   }
   var result = "";
@@ -60,10 +69,22 @@ function prettyHelper(obj, indent) {
     {
       if (value instanceof Array)
       {
-        // Just let JS convert the Array to a string!
-        value = "[ " + value + " ]";
+        if(value.length > 50) {
+          value = "too big array";
+        }
+        else {
+          // Just let JS convert the Array to a string!
+          //value = "[ " + value + " ]";
+          value = arrayString(value);
+          // var toPut = "[";
+          // for(var i = 0; i < value.length; i++) {
+          //   toPut += (value[i].toString()) + ", ";
+          // }
+          // toPut += "]";
+          // value = toPut;
+        }
       }
-      else if (OWN_TOSTRING_TABLE.includes(value.constructor.name)) {
+      else if ((value != null) && OWN_TOSTRING_TABLE.includes(value.constructor.name)) {
         value = value.toString();
       }
       else

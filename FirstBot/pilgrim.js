@@ -12,5 +12,10 @@ export function pilgrimInitialize(state) {
     var costs = navigation.makeShortestPathTree(state.myLoc, SPECS.UNITS[SPECS.PILGRIM].SPEED, state.map);
     state.karbLocs = navigation.getLocsByCloseness(costs, state.karbLocs);
     state.fuelLocs = navigation.getLocsByCloseness(costs, state.fuelLocs);
+    
   }
+}
+
+export function pilgrimTurn(state) {
+
 }
