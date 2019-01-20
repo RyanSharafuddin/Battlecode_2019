@@ -209,30 +209,119 @@ export function castleTalkWrapper(state, value) {
   state.castleTalksToSend.push(value);
 }
 
-export function setNewPath(state, maxSpeed, newLoc) {
-  //NOTE: state only works for my very crude "pre mode" stuff. See the initialization of
-  //      the rusher for details. returns the value that the main
-  //      function should return to move, or null if no move (fix when make mode sytem)
-  var forbiddenLocs = navigation.getLocsFromOffsets(navigation.getOccupiedMovableOffsets(state, maxSpeed, {friendly: true, enemy: true}), state.myLoc);
+export function setModeGoTo(state, targetList, maxSpeed, nextMode, avoidLocs, extras) {
+  var occupiedMovableLocs = navigation.getLocsFromOffsets(navigation.getOccupiedMovableOffsets(state, maxSpeed, {friendly: true, enemy: true}), state.myLoc);
+  var forbiddenLocs = occupiedMovableLocs.concat(avoidLocs); //concatenate with avoid locs.
   var costs = navigation.makeShortestPathTree(state.myLoc, maxSpeed, state.map, {forbiddenLocs: forbiddenLocs});
-  state.pathToTarget = navigation.getPathTo(costs, state.myLoc, newLoc, state);
-  if(state.pathToTarget == null) {
-    state.mode = CONSTANTS.MODE.WAIT; //TODO: Consider whether to wait for friendly bots to move
-    return null;                      // or see whether to head to next target in target list. Perhaps have a
-  }                                   //function that returns how long to wait based on how close the next target is
-  state.numMoveToMake = 0;
+  targetList = utilities.flattenFirst(navigation.getLocsByCloseness(costs, targetList));
+  var pathToTarget = null;
+  var currentTargetIndex = 0;
+  for(; currentTargetIndex < targetList.length; currentTargetIndex++) {
+    pathToTarget = navigation.getPathTo(costs, state.myLoc, targetList[currentTargetIndex]);
+    if(pathToTarget != null) {
+      break;
+    }
+  }
+  var numMoveToMake = 0;
+  var modeInfo = {
+    pathToTarget: pathToTarget,
+    numMoveToMake: numMoveToMake,
+    maxSpeed: maxSpeed,
+    targetList: targetList,
+    currentTargetIndex: currentTargetIndex,
+    avoidLocs: avoidLocs,
+    nextMode: nextMode,
+    modeVal: CONSTANTS.MODE.GO_TO_TARGET
+  };
+  state.modesList.push(modeInfo);
+  state.modeIndex = state.modesList.length - 1;
+  state.currentModeInfo = modeInfo;
+  if(pathToTarget == null) {
+    state.currentModeInfo.extras = {waiting: true}
+  }
+  state.log("Have finished function setModeGoTo.");
+  state.log("Modes list: " + utilities.pretty(state.modesList));
+}
+
+export function goToTurn(state, avoidLocs, extras) {
+  var mi = state.currentModeInfo;
+  mi.avoidLocs = avoidLocs; //NOTE: If ya need permanent avoidLocs, then change this line to concat or something.
+  if(mi.extras && mi.extras.waiting) {
+    var forbiddenLocs = navigation.getLocsFromOffsets(navigation.getOccupiedMovableOffsets(state, mi.maxSpeed, {friendly: true, enemy: true}), state.myLoc).concat(avoidLocs);
+    var costs = navigation.makeShortestPathTree(state.myLoc, mi.maxSpeed, state.map, {forbiddenLocs: forbiddenLocs});
+    if(mi.currentTargetIndex >= mi.targetList.length) { //recalculate targetList and try going, and set extras.waiting to false
+      mi.targetList = utilities.flattenFirst(navigation.getLocsByCloseness(costs, mi.targetList));
+      mi.currentTargetIndex = 0;
+    }
+    if(navigation.isReachable(costs, mi.targetList[mi.currentTargetIndex])) {
+      //go go go
+      mi.pathToTarget = navigation.getPathTo(costs, state.myLoc, mi.targetList[0]);
+      mi.numMoveToMake = 0;
+      mi.extras = undefined;
+    }
+    else { //keep waiting
+      return null;
+    }
+  }
+  var moveToMake = mi.pathToTarget[mi.numMoveToMake];
+  var idAtMove = navigation.idAtOffset(moveToMake, state);
+  var botAtMove;
+  if(idAtMove > 0) { //bot at place I want to move
+    botAtMove = state.getRobot(idAtMove);
+    var friendlyAtMove = (botAtMove.team === state.me.team);
+    if(friendlyAtMove) {
+      if(mi.numMoveToMake == mi.pathToTarget.length - 1) {
+        //were about to move to target and is blocked by friendly bot
+         var potentialTargetLoc = getNextOpenTarget(state);
+         if(potentialTargetLoc == null) { //TODO go to wait mode after resetting currentTargetIndex
+           state.log("Waiting for path to clear up");
+           mi.extras = {waiting: true};
+           return null;
+         }
+         else {
+           return setNewPath(state, potentialTargetLoc);
+         }
+      }
+
+      else { //friendly bot where I want to move, but weren't about to move to target
+        return setNewPath(state, state.targetList[state.currentTargetIndex]);
+      }
+    }
+    else { //there's a bot where I want to move, but it's enemy bot
+      throw "WTH? Shouldn't I have switched to attack or enemy handler state? Enemy at place I want to move.";
+      return null;
+    }
+  }
+
+  else { //there is no bot where I want to move
+    return vanillaMove(state);
+  }
+}
+
+export function setNewPath(state, newLoc) {
+  var mi = state.currentModeInfo;
+  var forbiddenLocs = navigation.getLocsFromOffsets(navigation.getOccupiedMovableOffsets(state, mi.maxSpeed, {friendly: true, enemy: true}), state.myLoc).concat(mi.avoidLocs);
+  var costs = navigation.makeShortestPathTree(state.myLoc, mi.maxSpeed, state.map, {forbiddenLocs: forbiddenLocs});
+  mi.pathToTarget = navigation.getPathTo(costs, state.myLoc, newLoc, state);
+  if(mi.pathToTarget == null) {
+    mi.extras = {waiting: true}; //TODO: implement waiting mode, don't reset target index
+    state.log("Waiting for path to clear up.")
+    return null;
+  }
+  mi.numMoveToMake = 0;
   return vanillaMove(state);
 }
 
-export function getNextOpenTarget(state, maxSpeed) {
+export function getNextOpenTarget(state) {
   //return type: Location
-  //return the next target in targetList that is either invisible, unoccupied, or occupied by enemy
+  //return the next target in targetList that is either invisible, unoccupied, or occupied by enemy (if see enemy, should trigger different mode anyway)
   //or return null if there is none. WARNING: can return null
   //set state.currentTargetIndex correspondingly
-  var forbiddenLocs = navigation.getLocsFromOffsets(navigation.getOccupiedMovableOffsets(state, maxSpeed, {friendly: true, enemy: true}), state.myLoc);
-  var costs = navigation.makeShortestPathTree(state.myLoc, maxSpeed, state.map, {forbiddenLocs: forbiddenLocs});
-  for(state.currentTargetIndex++; state.currentTargetIndex < state.targetList.length; state.currentTargetIndex++) {
-    var potentialTargetLoc = state.targetList[state.currentTargetIndex];
+  var mi = state.currentModeInfo;
+  var forbiddenLocs = navigation.getLocsFromOffsets(navigation.getOccupiedMovableOffsets(state, maxSpeed, {friendly: true, enemy: true}), state.myLoc).concat(mi.avoidLocs);
+  var costs = navigation.makeShortestPathTree(state.myLoc, mi.maxSpeed, state.map, {forbiddenLocs: forbiddenLocs});
+  for(mi.currentTargetIndex++; mi.currentTargetIndex < mi.targetList.length; mi.currentTargetIndex++) {
+    var potentialTargetLoc = mi.targetList[mi.currentTargetIndex];
     var idAtPotentialTarget = navigation.idAtOffset([potentialTargetLoc.y - state.myLoc.y, potentialTargetLoc.x - state.myLoc.x], state);
     var tiue = ( (idAtPotentialTarget <= 0) || (state.getRobot(idAtPotentialTarget).team != state.me.team)); //target invisible unoccupied or enemy
     if(tiue && navigation.isReachable(costs, potentialTargetLoc)) {
@@ -243,10 +332,17 @@ export function getNextOpenTarget(state, maxSpeed) {
 }
 
 export function vanillaMove(state) {
-  var moveToMake = state.pathToTarget[state.numMoveToMake];
-  state.numMoveToMake += 1;
-  if(state.numMoveToMake == state.pathToTarget.length) {
-    state.mode = CONSTANTS.MODE.PATROL; //NOTE: do not return here; still need to make state move
+  var mi = state.currentModeInfo;
+  var moveToMake = mi.pathToTarget[mi.numMoveToMake];
+  mi.numMoveToMake += 1;
+  if(mi.numMoveToMake == mi.pathToTarget.length) {
+    //throw error if modeIndex is not the last index of modesList
+    if(state.modeIndex != state.modesList.length -1) {
+      throw "Did not push go to mode on properly";
+    }
+    state.modeIndex = mi.nextMode;
+    state.modesList.pop();
+    state.currentModeInfo = state.modesList[mi.nextMode]; //NOTE switching to mode supplied to in nextMode
   }
   state.log("Making move: dx: " + moveToMake[1] + " dy: " + moveToMake[0]);
   return state.move(moveToMake[1], moveToMake[0]);
@@ -267,7 +363,7 @@ export function rusherTurn(state) {
     return null; //TODO: Implement
   }
   if(state.mode == CONSTANTS.MODE.GO_TO_TARGET) {
-    var moveToMake = state.pathToTarget[state.numMoveToMake]; //WARNING see robotFunctions
+    var moveToMake = state.pathToTarget[state.numMoveToMake];
     var idAtMove = navigation.idAtOffset(moveToMake, state);
     var botAtMove;
     if(idAtMove > 0) { //bot at place I want to move

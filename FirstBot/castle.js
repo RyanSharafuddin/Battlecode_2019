@@ -28,16 +28,16 @@ export function castleInitialize(state) {
                               mineNum: 0,
                               mineType: "karbonite",
                               whichCC: whichCC,
-                              nextMode: -1
+                              nextMode: -1,
+                              modeVal: CONSTANTS.MODE.SPAWN_PILGRIMS
                             };
     state.modesList = [state.currentModeInfo];
     state.modeIndex = 0;
-    state.modeVal = CONSTANTS.MODE.SPAWN_PILGRIMS;
   }
 }
 export function castleTurn(state) {
   learnLocs(state);
-  switch(state.modeVal) {
+  switch(state.currentModeInfo.modeVal) {
     case CONSTANTS.MODE.SPAWN_PILGRIMS:
       state.log("In spawn pilgrim mode");
       return modePilgrimSpawn(state);

@@ -29,33 +29,13 @@ export function pilgrimInitialize(state) {
 }
 
 export function pilgrimTurn(state) {
-  switch(state.modeVal) {
+  state.log("The current modeInfo of pilgrim: " + utilities.pretty(state.currentModeInfo));
+  switch(state.currentModeInfo.modeVal) {
     case CONSTANTS.MODE.MINE:
-      /*
-        on mine and under capacity -> mine                             DONE
-        on mine and at capacity -> go to square adjacent to depositLoc
-        adjacent to deposit loc and at capacity -> give
-        adjacent to deposit loc and at 0 -> go to mine
-       */
-      state.log("In mine mode. Mode info: " + utilities.pretty(state.currentModeInfo));
-      var mineType = (state.karbonite_map[state.currentModeInfo.mineLoc.y][state.currentModeInfo.mineLoc.x]) ? "karbonite" : "fuel";
-      var atCapacity = (mineType == "karbonite") ? (state.me.karbonite == SPECS.UNITS[SPECS.PILGRIM].KARBONITE_CAPACITY) : (state.me.fuel == SPECS.UNITS[SPECS.PILGRIM].FUEL_CAPACITY);
-      var nextToDeposit = (navigation.radiusBetween(state.myLoc, state.currentModeInfo.depositLoc) <= 2);
-      var onMine = state.myLoc.equals(state.currentModeInfo.mineLoc);
-
-      if(nextToDeposit && atCapacity) {
-        return state.give(state.depositLoc.x - state.myLoc.x, state.depositLoc.y - state.myLoc.y, state.me.karbonite, state.me.fuel);
-      }
-      if(onMine && !atCapacity) {
-        return state.mine();
-      }
-
-      if(nextToDeposit && !atCapacity) {
-        //go to mine (not on mine because if were, see above)
-      }
-      if(onMine && atCapacity) {
-        //go to deposit (not at deposit b/c if were, see above)
-      }
+      return miningTurn(state);
+      break;
+    case CONSTANTS.MODE.GO_TO_TARGET:
+      return robotFunctions.goToTurn(state, []);
       break;
   }
 }
@@ -63,10 +43,45 @@ export function pilgrimTurn(state) {
 function setModeMine(state, depositLoc, mineLoc) {
   var modeInfo = {
     depositLoc: depositLoc,
-    mineLoc: mineLoc
+    mineLoc: mineLoc,
+    modeVal: CONSTANTS.MODE.MINE
   };
   state.modesList.push(modeInfo);
   state.currentModeInfo = modeInfo;
   state.modeIndex = state.modesList.length - 1;
-  state.modeVal = CONSTANTS.MODE.MINE;
+}
+
+function miningTurn(state) {
+  /*
+    on mine and under capacity -> mine                             DONE
+    on mine and at capacity -> go to square adjacent to depositLoc
+    adjacent to deposit loc and at capacity -> give
+    adjacent to deposit loc and at 0 -> go to mine
+   */
+  state.log("In mine mode");
+  var mi = state.currentModeInfo;
+  var mineType = (state.karbonite_map[state.currentModeInfo.mineLoc.y][state.currentModeInfo.mineLoc.x]) ? "karbonite" : "fuel";
+  var atCapacity = (mineType == "karbonite") ? (state.me.karbonite == SPECS.UNITS[SPECS.PILGRIM].KARBONITE_CAPACITY) : (state.me.fuel == SPECS.UNITS[SPECS.PILGRIM].FUEL_CAPACITY);
+  var nextToDeposit = (navigation.radiusBetween(state.myLoc, state.currentModeInfo.depositLoc) <= 2);
+  var onMine = state.myLoc.equals(state.currentModeInfo.mineLoc);
+
+  if(nextToDeposit && atCapacity) {
+    return state.give(mi.depositLoc.x - state.myLoc.x, mi.depositLoc.y - state.myLoc.y, state.me.karbonite, state.me.fuel);
+  }
+  if(onMine && !atCapacity) {
+    return state.mine();
+  }
+
+  if(nextToDeposit && !atCapacity) {
+    //go to mine (not on mine because if were, see above)
+    robotFunctions.setModeGoTo(state, [mi.mineLoc], SPECS.UNITS[SPECS.PILGRIM].SPEED, state.modeIndex, []);
+    return robotFunctions.goToTurn(state, []);
+  }
+  if(onMine && atCapacity) {
+    //go to deposit (not at deposit b/c if were, see above)
+    var inRange = navigation.getOffsetsInRange(2);
+    var depositFromList = navigation.getLocsFromOffsets(navigation.getMovableOffsets(mi.depositLoc, inRange, state.map), mi.depositLoc);
+    robotFunctions.setModeGoTo(state, depositFromList, SPECS.UNITS[SPECS.PILGRIM].SPEED, state.modeIndex, []);
+    return robotFunctions.goToTurn(state, []);
+  }
 }

@@ -39,6 +39,7 @@ class MyRobot extends BCAbstractRobot {
 
       case SPECS.PILGRIM:
         this.log("Pilgrim. Turn: " + this.me.turn);
+        this.log("myLoc: " + this.myLoc);
         robotFunctions.nonBuildingInitialize(this);
         pilgrim.pilgrimInitialize(this);
         return pilgrim.pilgrimTurn(this);
