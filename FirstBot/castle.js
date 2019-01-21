@@ -10,41 +10,118 @@ import * as CONSTANTS from './universalConstants.js'
 
 export function castleInitialize(state) {
   if(state.me.turn == 1) {
-    var secondCC = (state.karbLocsTwo.length != 0);
-    var numMines = 0;
-    const TCOST = 550; //highest tolerable number of moves to mine.
-    var whichCC = [];
-    var klo = state.karbLocsOne;
-    var klt = state.karbLocsTwo;
-    for(;  ((numMines < klo.length) && (klo[numMines][1] <= TCOST))  || (secondCC && (numMines < klt.length) && (klt[numMines][1] <= TCOST)); numMines++) {
-      if (state.karbLocsOne[numMines][1] <= TCOST) {
-        whichCC.push(0);
-      }
-      else {
-        whichCC.push(1);
-      }
-    }
-    state.currentModeInfo = {
-                              reason: CONSTANTS.REASON.NEARBY_MINES,
-                              numPilgrims: numMines,
-                              mineNum: 0,
-                              mineType: "karbonite",
-                              whichCC: whichCC,
-                              nextMode: -1,
-                              modeVal: CONSTANTS.MODE.SPAWN_PILGRIMS
-                            };
-    state.modesList = [state.currentModeInfo];
-    state.modeIndex = 0;
+    state.modesList = [];
+    setModeDefend(state);
+    const TCOST = 3;
+    takeNearestMines(state, TCOST, Number.POSITIVE_INFINITY, "karbonite");
   }
 }
+
 export function castleTurn(state) {
   learnLocs(state);
   switch(state.currentModeInfo.modeVal) {
-    case CONSTANTS.MODE.SPAWN_PILGRIMS:
-      state.log("In spawn pilgrim mode");
-      return modePilgrimSpawn(state);
-    break;
+    case CONSTANTS.MODE.SPAWN:
+      state.log("In spawn mode");
+      state.log(utilities.pretty(state.currentModeInfo));
+      return spawnTurn(state);
+      break;
+
+    case CONSTANTS.MODE.DEFEND:
+      state.log("In defend mode: "); //TODO implement
+      return null;
+      break;
+
   }
+}
+
+function nearestMines(state, cost, number, mineType) {
+  //returns {locations: [] list of locs whichCCList: [] } of nearest NUMBER of mins of type MINETYPE that cost less than COST
+  var whichCCList = [];
+  var locations = [];
+
+  var secondCC = (state.karbLocsTwo.length != 0);
+  var klo = (mineType == "karbonite") ? state.karbLocsOne : state.fuelLocsOne;
+  var klt =  (mineType == "karbonite") ? state.karbLocsTwo : state.fuelLocsTwo;
+  for(var mineIndex = 0;
+    (((mineIndex < klo.length) && (klo[mineIndex][1] <= cost))  ||
+    (secondCC && (mineIndex < klt.length) && (klt[mineIndex][1] <= cost))) &&
+  (mineIndex < number);
+     mineIndex++)                                         {
+
+          if (klo[mineIndex][1] <= cost) {
+            whichCCList.push(0);
+            locations.push(klo[mineIndex][0]);
+          }
+          else {
+            whichCCList.push(1);
+            locations.push(klt[mineIndex][0]);
+          }
+  }
+  return ({locations: locations, whichCCList: whichCCList});
+}
+
+function takeNearestMines(state, cost, number, mineType) {
+  var minesObj = nearestMines(state, cost, number, mineType);
+  state.log("Called takeNearestMines; here's the minesObj: " + utilities.pretty(minesObj));
+  var unitsToSpawn = new Array(minesObj.locations.length).fill(SPECS.PILGRIM);
+  var signalList = [];
+  var whichCCList = [];
+  for(var i = 0; i < minesObj.locations.length; i++) {
+    var mineLoc = minesObj.locations[i];
+    signalList.push([(mineLoc.y << 6 | mineLoc.x), 2]);
+    whichCCList.push(minesObj.whichCCList[i]);
+  }
+  var nextMode = state.modeIndex;
+  setSpawnMode(state, unitsToSpawn, signalList, whichCCList, nextMode);
+}
+
+function setSpawnMode(state, unitsToSpawn, signalList, whichCCList, nextMode) {
+  var modeInfo = {
+    unitsToSpawn: unitsToSpawn,
+    unitIndex: 0,
+    signalList: signalList,
+    whichCCList: whichCCList,
+    modeVal: CONSTANTS.MODE.SPAWN,
+    nextMode: nextMode
+  };
+  state.currentModeInfo = modeInfo;
+  state.modesList.push(modeInfo);
+  state.modeIndex = state.modesList.length - 1;
+}
+
+function spawnTurn(state) {
+  var mi = state.currentModeInfo;
+  var unitToBuild = mi.unitsToSpawn[mi.unitIndex];
+  var signal = mi.signalList[mi.unitIndex][0];
+  var signalRadius = mi.signalList[mi.unitIndex][1];
+  var lowKarb = SPECS.UNITS[unitToBuild].CONSTRUCTION_KARBONITE > state.karbonite;
+  var lowFuel = SPECS.UNITS[unitToBuild].CONSTRUCTION_FUEL + 2 > state.fuel
+  if(lowKarb || lowFuel) {
+    state.log("TOO FEW RESOURCES TO BUILD UNIT");
+    return "LOW_RESOURCES";
+  }
+  var offsetListToUse = (mi.whichCCList[mi.unitIndex]) ? state.secondUnoccupiedBuild : state.firstUnoccupiedBuild;
+  if(offsetListToUse.length == 0) {
+    state.log("No room to build");
+    return "NO_ROOM";
+  }
+  mi.unitIndex++;
+  if(mi.unitIndex == mi.unitsToSpawn.length) {
+    //switch back to previous mode.
+    state.currentModeInfo = state.modesList[mi.nextMode];
+    state.modeIndex = mi.nextMode;
+    state.modesList.pop();
+  }
+  state.signal(signal, signalRadius);
+  return state.buildUnit(unitToBuild, offsetListToUse[0][1], offsetListToUse[0][0]);
+}
+
+function setModeDefend(state) {
+  //TODO: implement
+  var modeInfo = {modeVal: CONSTANTS.MODE.DEFEND};
+  state.modesList.push(modeInfo);
+  state.modeIndex = state.modesList.length - 1;
+  state.currentModeInfo = modeInfo;
 }
 
 function modePilgrimSpawn(state) {

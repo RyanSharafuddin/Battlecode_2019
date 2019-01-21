@@ -141,6 +141,20 @@ export function buildingInitialize(state) {
       state.unoccupiedBuildableOffsets.push(offset);
     }
   }
+  state.firstUnoccupiedBuild = [];
+  for(var i = 0; i < state.startingConnectedComponents[0].length; i++) {
+    var offset = state.startingConnectedComponents[0][i];
+    if(navigation.isOffsetUnoccupied(offset, state)) {
+      state.firstUnoccupiedBuild.push(offset);
+    }
+  }
+  state.secondUnoccupiedBuild = [];
+  for(var i = 0; i < state.startingConnectedComponents[1].length; i++) {
+    var offset = state.startingConnectedComponents[1][i];
+    if(navigation.isOffsetUnoccupied(offset, state)) {
+      state.secondUnoccupiedBuild.push(offset);
+    }
+  }
   if(state.me.unit == SPECS.CASTLE) {
     //castle every turn
     state.castleTalkingRobots = [];

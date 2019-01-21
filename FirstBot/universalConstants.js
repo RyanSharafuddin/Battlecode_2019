@@ -5,7 +5,8 @@ export const MODE = {
   GO_TO_TARGET: 2,
   PATROL: 3,
   MINE: 5,
-  DEFEND: 6
+  DEFEND: 6,
+  SPAWN: 7
 }
 
 export const REASON = {
