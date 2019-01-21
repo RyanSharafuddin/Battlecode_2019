@@ -284,7 +284,7 @@ export function goToTurn(state, avoidLocs, extras) {
       }
 
       else { //friendly bot where I want to move, but weren't about to move to target
-        return setNewPath(state, state.targetList[state.currentTargetIndex]);
+        return setNewPath(state, mi.targetList[mi.currentTargetIndex]);
       }
     }
     else { //there's a bot where I want to move, but it's enemy bot
@@ -318,7 +318,7 @@ export function getNextOpenTarget(state) {
   //or return null if there is none. WARNING: can return null
   //set state.currentTargetIndex correspondingly
   var mi = state.currentModeInfo;
-  var forbiddenLocs = navigation.getLocsFromOffsets(navigation.getOccupiedMovableOffsets(state, maxSpeed, {friendly: true, enemy: true}), state.myLoc).concat(mi.avoidLocs);
+  var forbiddenLocs = navigation.getLocsFromOffsets(navigation.getOccupiedMovableOffsets(state, mi.maxSpeed, {friendly: true, enemy: true}), state.myLoc).concat(mi.avoidLocs);
   var costs = navigation.makeShortestPathTree(state.myLoc, mi.maxSpeed, state.map, {forbiddenLocs: forbiddenLocs});
   for(mi.currentTargetIndex++; mi.currentTargetIndex < mi.targetList.length; mi.currentTargetIndex++) {
     var potentialTargetLoc = mi.targetList[mi.currentTargetIndex];
@@ -334,6 +334,12 @@ export function getNextOpenTarget(state) {
 export function vanillaMove(state) {
   var mi = state.currentModeInfo;
   var moveToMake = mi.pathToTarget[mi.numMoveToMake];
+  var x = moveToMake[1];
+  var y = moveToMake[0];
+  if((state.stats.FUEL_PER_MOVE * (x**2 + y**2)) > state.fuel) {
+    state.log("TOO LITTLE FUEL TO MAKE THIS MOVE");
+    return("FUEL_LOW");
+  }
   mi.numMoveToMake += 1;
   if(mi.numMoveToMake == mi.pathToTarget.length) {
     //throw error if modeIndex is not the last index of modesList
@@ -344,56 +350,6 @@ export function vanillaMove(state) {
     state.modesList.pop();
     state.currentModeInfo = state.modesList[mi.nextMode]; //NOTE switching to mode supplied to in nextMode
   }
-  state.log("Making move: dx: " + moveToMake[1] + " dy: " + moveToMake[0]);
-  return state.move(moveToMake[1], moveToMake[0]);
-}
-
-export function rusherTurn(state) {
-  //After turn 1 setup, before anything else (i.e. in all modes)
-  var attackable = attacker.getAttackablePrioritizedByUnit(state);
-  if(attackable.length > 0) {
-    return state.attack(attackable[0].x - state.me.x, attackable[0].y - state.me.y);
-  }
-  if(state.mode == CONSTANTS.MODE.PATROL) {
-    //TODO patrol code
-    state.log("Rusher @ " + JSON.stringify(state.myLoc) + " and is in patrol mode");
-    return null;
-  }
-  if(state.mode == CONSTANTS.MODE.WAIT) {
-    return null; //TODO: Implement
-  }
-  if(state.mode == CONSTANTS.MODE.GO_TO_TARGET) {
-    var moveToMake = state.pathToTarget[state.numMoveToMake];
-    var idAtMove = navigation.idAtOffset(moveToMake, state);
-    var botAtMove;
-    if(idAtMove > 0) { //bot at place I want to move
-      botAtMove = state.getRobot(idAtMove);
-      var friendlyAtMove = (botAtMove.team === state.me.team);
-      if(friendlyAtMove) {
-        if(state.numMoveToMake == state.pathToTarget.length - 1) {
-          //were about to move to target and is blocked by friendly bot
-           var potentialTargetLoc = getNextOpenTarget(state, state.stats.SPEED);
-           if(potentialTargetLoc == null) {
-             state.mode = CONSTANTS.MODE.PATROL; //TODO consider waiting?
-             return null;
-           }
-           else {
-             return setNewPath(state, SPECS.UNITS[state.me.unit].SPEED, potentialTargetLoc);
-           }
-        }
-
-        else { //friendly bot where I want to move, but weren't about to move to target
-          return setNewPath(state, SPECS.UNITS[state.me.unit].SPEED, state.targetList[state.currentTargetIndex]);
-        }
-      }
-      else { //there's a bot where I want to move, but it's enemy bot
-        throw "WTH? Shouldn't I have attacked state? Enemy at place I want to move.";
-        return null;
-      }
-    }
-
-    else { //there is no bot where I want to move
-      return vanillaMove(state);
-    }
-  }
+  state.log("Making move: dx: " + x + " dy: " + y);
+  return state.move(x, y);
 }

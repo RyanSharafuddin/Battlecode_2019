@@ -12,9 +12,11 @@ export function castleInitialize(state) {
   if(state.me.turn == 1) {
     var secondCC = (state.karbLocsTwo.length != 0);
     var numMines = 0;
-    const TCOST = 3; //highest tolerable cost at first.
+    const TCOST = 550; //highest tolerable number of moves to mine.
     var whichCC = [];
-    for(; (state.karbLocsOne[numMines][1] <= TCOST) || (secondCC && (state.karbLocsTwo[numMines][1] <= TCOST)); numMines++) {
+    var klo = state.karbLocsOne;
+    var klt = state.karbLocsTwo;
+    for(;  ((numMines < klo.length) && (klo[numMines][1] <= TCOST))  || (secondCC && (numMines < klt.length) && (klt[numMines][1] <= TCOST)); numMines++) {
       if (state.karbLocsOne[numMines][1] <= TCOST) {
         whichCC.push(0);
       }
@@ -49,8 +51,9 @@ function modePilgrimSpawn(state) {
   if(state.unoccupiedBuildableOffsets.length > 0) {
 
     if(state.currentModeInfo.numPilgrims <= 0) {
-      return;
+      return; //TODO switch modes here
     }
+    state.currentModeInfo.numPilgrims--;
     switch (state.currentModeInfo.reason) {
       case CONSTANTS.REASON.NEARBY_MINES:
         var karbListToUse = (state.currentModeInfo.whichCC[state.currentModeInfo.mineNum] == 0) ? state.karbLocsOne : state.karbLocsTwo;
@@ -59,7 +62,6 @@ function modePilgrimSpawn(state) {
 
         var offsetListToUse = state.startingConnectedComponents[state.currentModeInfo.whichCC[state.currentModeInfo.mineNum]];
         state.currentModeInfo.mineNum++;
-        state.currentModeInfo.numPilgrims--;
         for (var i = 0; i < offsetListToUse.length; i++) {
           if(navigation.isOffsetUnoccupied(offsetListToUse[i], state)) {
             state.signal((mineLoc.y << 6 | mineLoc.x) , 2);
