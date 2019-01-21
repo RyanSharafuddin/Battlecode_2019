@@ -29,13 +29,17 @@ export function pilgrimInitialize(state) {
 }
 
 export function pilgrimTurn(state) {
-  state.log("The current modeInfo of pilgrim: " + utilities.pretty(state.currentModeInfo));
+  // state.log("The current modeInfo of pilgrim: " + utilities.pretty(state.currentModeInfo));
   switch(state.currentModeInfo.modeVal) {
     case CONSTANTS.MODE.MINE:
       return miningTurn(state);
       break;
     case CONSTANTS.MODE.GO_TO_TARGET:
-      return robotFunctions.goToTurn(state, []);
+      var retVal = robotFunctions.goToTurn(state, []);
+      if(retVal == "FUEL_LOW") {
+        return null;
+      }
+      return retVal;
       break;
   }
 }
@@ -65,23 +69,28 @@ function miningTurn(state) {
   var nextToDeposit = (navigation.radiusBetween(state.myLoc, state.currentModeInfo.depositLoc) <= 2);
   var onMine = state.myLoc.equals(state.currentModeInfo.mineLoc);
 
-  if(nextToDeposit && atCapacity) {
-    return state.give(mi.depositLoc.x - state.myLoc.x, mi.depositLoc.y - state.myLoc.y, state.me.karbonite, state.me.fuel);
-  }
-  if(onMine && !atCapacity) {
-    return state.mine();
+  if(atCapacity) {
+    if(nextToDeposit) {
+      return state.give(mi.depositLoc.x - state.myLoc.x, mi.depositLoc.y - state.myLoc.y, state.me.karbonite, state.me.fuel);
+    }
+    else {
+      //go to deposit
+      var inRange = navigation.getOffsetsInRange(2);
+      var depositFromList = navigation.getLocsFromOffsets(navigation.getMovableOffsets(mi.depositLoc, inRange, state.map), mi.depositLoc);
+      robotFunctions.setModeGoTo(state, depositFromList, SPECS.UNITS[SPECS.PILGRIM].SPEED, state.modeIndex, []);
+      return robotFunctions.goToTurn(state, []);
+    }
   }
 
-  if(nextToDeposit && !atCapacity) {
-    //go to mine (not on mine because if were, see above)
-    robotFunctions.setModeGoTo(state, [mi.mineLoc], SPECS.UNITS[SPECS.PILGRIM].SPEED, state.modeIndex, []);
-    return robotFunctions.goToTurn(state, []);
-  }
-  if(onMine && atCapacity) {
-    //go to deposit (not at deposit b/c if were, see above)
-    var inRange = navigation.getOffsetsInRange(2);
-    var depositFromList = navigation.getLocsFromOffsets(navigation.getMovableOffsets(mi.depositLoc, inRange, state.map), mi.depositLoc);
-    robotFunctions.setModeGoTo(state, depositFromList, SPECS.UNITS[SPECS.PILGRIM].SPEED, state.modeIndex, []);
-    return robotFunctions.goToTurn(state, []);
+  else {
+    //if not at capacity
+    if(onMine) {
+      return state.mine();
+    }
+    else {
+      //go to mine
+      robotFunctions.setModeGoTo(state, [mi.mineLoc], SPECS.UNITS[SPECS.PILGRIM].SPEED, state.modeIndex, []);
+      return robotFunctions.goToTurn(state, []);
+    }
   }
 }

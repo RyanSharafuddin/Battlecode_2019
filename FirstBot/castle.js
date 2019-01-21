@@ -7,12 +7,11 @@ import * as robotFunctions from './robotFunctions.js'
 import * as attacker from './attacker.js'
 import * as CONSTANTS from './universalConstants.js'
 
-
+const TCOST = 3;
 export function castleInitialize(state) {
   if(state.me.turn == 1) {
     state.modesList = [];
     setModeDefend(state);
-    const TCOST = 3;
     takeNearestMines(state, TCOST, Number.POSITIVE_INFINITY, "karbonite");
   }
 }
@@ -21,13 +20,20 @@ export function castleTurn(state) {
   learnLocs(state);
   switch(state.currentModeInfo.modeVal) {
     case CONSTANTS.MODE.SPAWN:
-      state.log("In spawn mode");
-      state.log(utilities.pretty(state.currentModeInfo));
-      return spawnTurn(state);
+      // state.log("In spawn mode");
+      // state.log(utilities.pretty(state.currentModeInfo));
+      var retVal = spawnTurn(state);
+      return((retVal == "LOW_RESOURCES" || retVal == "NO_ROOM") ? null : retVal);
       break;
 
     case CONSTANTS.MODE.DEFEND:
       state.log("In defend mode: "); //TODO implement
+      // var karb = nearestMines(state, TCOST, Number.POSITIVE_INFINITY, "karbonite").locations.length;
+      // var fuel = nearestMines(state, TCOST, Number.POSITIVE_INFINITY, "fuel").locations.length;
+      // if(state.visibleFriends.length < karb + fuel) { //WARNING get rid of this after you test it.
+      //   takeNearestMines(state, TCOST, Number.POSITIVE_INFINITY, "fuel");
+      //   return castleTurn(state);
+      // }
       return null;
       break;
 
@@ -62,7 +68,7 @@ function nearestMines(state, cost, number, mineType) {
 
 function takeNearestMines(state, cost, number, mineType) {
   var minesObj = nearestMines(state, cost, number, mineType);
-  state.log("Called takeNearestMines; here's the minesObj: " + utilities.pretty(minesObj));
+  // state.log("Called takeNearestMines; here's the minesObj: " + utilities.pretty(minesObj));
   var unitsToSpawn = new Array(minesObj.locations.length).fill(SPECS.PILGRIM);
   var signalList = [];
   var whichCCList = [];

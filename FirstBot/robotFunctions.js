@@ -70,9 +70,12 @@ export function initializeAll(state) {
   var robos = state.getVisibleRobots();
   for (var i = 0; i < robos.length; i++) {
     var robo = robos[i];
+    if(robo.id == state.me.id) {
+      continue;
+    }
     if(state.isVisible(robo)) {
       state.robotCache.add({id: robo.id, unit: robo.unit, team: robo.team});
-      ( (robo.team == state.me.team) && (robo.id != state.me.id)) ? state.visibleFriends.push(robo) : state.visibleEnemies.push(robo);
+      (robo.team == state.me.team) ? state.visibleFriends.push(robo) : state.visibleEnemies.push(robo);
       if( (robo.team != state.me.team) && attacker.isOffsetInAttackingRange([robo.y - state.me.y, robo.x - state.me.x], state.me.unit)) {
         state.attackableRobots.push(robo);
       }
@@ -253,8 +256,8 @@ export function setModeGoTo(state, targetList, maxSpeed, nextMode, avoidLocs, ex
   if(pathToTarget == null) {
     state.currentModeInfo.extras = {waiting: true}
   }
-  state.log("Have finished function setModeGoTo.");
-  state.log("Modes list: " + utilities.pretty(state.modesList));
+  // state.log("Have finished function setModeGoTo.");
+  // state.log("Modes list: " + utilities.pretty(state.modesList));
 }
 
 export function goToTurn(state, avoidLocs, extras) {
@@ -282,28 +285,23 @@ export function goToTurn(state, avoidLocs, extras) {
   var botAtMove;
   if(idAtMove > 0) { //bot at place I want to move
     botAtMove = state.getRobot(idAtMove);
-    var friendlyAtMove = (botAtMove.team === state.me.team);
-    if(friendlyAtMove) {
-      if(mi.numMoveToMake == mi.pathToTarget.length - 1) {
-        //were about to move to target and is blocked by friendly bot
-         var potentialTargetLoc = getNextOpenTarget(state);
-         if(potentialTargetLoc == null) { //TODO go to wait mode after resetting currentTargetIndex
-           state.log("Waiting for path to clear up");
-           mi.extras = {waiting: true};
-           return null;
-         }
-         else {
-           return setNewPath(state, potentialTargetLoc);
-         }
-      }
-
-      else { //friendly bot where I want to move, but weren't about to move to target
-        return setNewPath(state, mi.targetList[mi.currentTargetIndex]);
-      }
+    if(mi.numMoveToMake == mi.pathToTarget.length - 1) {
+      //were about to move to target and is blocked by  bot
+       var potentialTargetLoc = getNextOpenTarget(state);
+       if(potentialTargetLoc == null) { //TODO go to wait mode after resetting currentTargetIndex
+         // state.log("Waiting for path to clear up");
+         mi.extras = {waiting: true};
+         return null;
+       }
+       else {
+         // state.log("Choosing new target")
+         return setNewPath(state, potentialTargetLoc);
+       }
     }
-    else { //there's a bot where I want to move, but it's enemy bot
-      throw "WTH? Shouldn't I have switched to attack or enemy handler state? Enemy at place I want to move.";
-      return null;
+
+    else { // bot where I want to move, but weren't about to move to target
+      // state.log("Was bot at location I wanted to move to, which wasn't target. Setting new path.")
+      return setNewPath(state, mi.targetList[mi.currentTargetIndex]);
     }
   }
 
